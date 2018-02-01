@@ -1,0 +1,19 @@
+[package]
+name = "main"
+version = "0.1.0"
+authors = ["amanjpro <amanj.sherwany@adgear.com>"]
+
+[[bin]]
+name = "smtpd"
+path = "src/smtpd.rs"
+
+[[bin]]
+name = "smtp"
+path = "src/smtpc.rs"
+
+[dependencies]
+docopt = "0.8"
+serde = "1.0" # if you're using `derive(Deserialize)`
+serde_derive = "1.0" # if you're using `derive(Deserialize)`
+serde_json = "1.0.9"
+common = { path = "../common" }
