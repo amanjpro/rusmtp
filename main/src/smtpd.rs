@@ -63,25 +63,23 @@ fn main() {
             child_stdout.read_to_string(&mut output);
 
             let passwd = output.trim();
-            println!("{}", passwd);
 
             // close the socket, if it exists
             fs::remove_file(SOCKET_PATH);
 
             if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
 
-                // accept connections and process them, spawning a new thread for each one
                 for stream in listener.incoming() {
                     match stream {
                         Ok(mut stream) => {
                           let mut mail = String::new();
                           stream.read_to_string(&mut mail).unwrap();
-                          println!("{}", mail);
                           let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
                           let recipients: Vec<String> = mail.recipients;
                           let body = mail.body;
 
-                          let msmtp = Command::new("msmtp").arg(format!("msmtp --passwordeval=\"echo {}\"", passwd))
+                          let msmtp = Command::new("msmtp")
+                              .arg(format!("--passwordeval=echo {}", passwd))
                               .args(recipients)
                               .stdin(Stdio::piped())
                               .stdout(Stdio::null())
