@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -o errexit -o nounset -o pipefail
+
+# Compile the project
+cargo build --release --manifest-path main/Cargo.toml
+
+# Move the executables to where they need to be
+cp target/release/smtp /usr/local/bin/
+cp target/release/smtpd /usr/local/bin/
+
+
+test -z ~/.smtpdrc && cp smtpdrc.default ~/.smtpdrc

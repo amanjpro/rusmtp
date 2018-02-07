@@ -1,0 +1,3 @@
+[Daemon]
+passwordeval=echo password
+smtp=/usr/local/bin/msmtp
