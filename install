@@ -6,7 +6,7 @@ set -o errexit -o nounset -o pipefail
 cargo build --release --manifest-path main/Cargo.toml
 
 # Move the executables to where they need to be
-cp target/release/smtp /usr/local/bin/
+cp target/release/smtpc /usr/local/bin/
 cp target/release/smtpd /usr/local/bin/
 
 

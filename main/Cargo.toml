@@ -8,7 +8,7 @@ name = "smtpd"
 path = "src/smtpd.rs"
 
 [[bin]]
-name = "smtp"
+name = "smtpc"
 path = "src/smtpc.rs"
 
 [dependencies]
