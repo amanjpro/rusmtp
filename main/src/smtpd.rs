@@ -2,30 +2,103 @@ extern crate serde;
 extern crate serde_json;
 extern crate common;
 extern crate docopt;
+extern crate ini;
 
 #[macro_use]
 extern crate serde_derive;
 
-use common::{SOCKET_PATH, Mail};
+use common::{SOCKET_PATH, Mail, Configuration};
+
 use std::os::unix::net::{UnixStream, UnixListener};
+use std::process::{exit, Command, Stdio};
 use std::io::{Read, Write};
+use std::env::home_dir;
 use std::error::Error;
 use std::fs;
 
-use std::process;
-use std::process::{Command, Stdio};
 use docopt::Docopt;
+use ini::Ini;
 
 
 // Define the struct that results from those options.
 #[derive(Deserialize, Debug)]
 struct Args {
-    arg_CMD: Option<String>,
+    flag_smtpdrc: String,
     flag_help: bool,
     flag_version: bool,
 }
 
+fn read_config(rc_path: &str) -> Configuration {
+    let conf = Ini::load_from_file(rc_path).unwrap();
+
+    let section = conf.section(Some("Daemon".to_owned())).unwrap();
+    let eval = section.get("passwordeval").unwrap();
+    let smtp = section.get("smtp").unwrap();
+
+    Configuration {
+        passwordeval: eval.to_string(),
+        smtpclient: smtp.to_string(),
+    }
+}
+
+fn send_mail(mut stream: UnixStream, client: &str, passwd: &str) {
+    let mut mail = String::new();
+    stream.read_to_string(&mut mail).unwrap();
+    let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
+    let recipients: Vec<String> = mail.recipients;
+    let body = mail.body;
+
+    let msmtp = Command::new(client)
+      .arg(format!("--passwordeval=echo {}", passwd))
+      .args(recipients)
+      .stdin(Stdio::piped())
+      .stdout(Stdio::null())
+      .spawn()
+      .expect("Failed to start msmtp process");
+
+    match msmtp.stdin.unwrap().write_all(body.as_slice()) {
+        Err(why) => panic!("couldn't write to msmtp stdin: {}", why.description()),
+        Ok(_) => println!("email sent to msmtp"),
+    }
+}
+
+fn start_daemon(conf: Configuration) {
+    let eval = &conf.passwordeval;
+    let client = &conf.smtpclient;
+
+    if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
+        let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
+        let mut output = String::new();
+        child_stdout.read_to_string(&mut output);
+
+        let passwd = output.trim();
+
+        // close the socket, if it exists
+        fs::remove_file(SOCKET_PATH);
+
+        if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+
+            for stream in listener.incoming() {
+                match stream {
+                    Ok(mut stream) => {
+                      send_mail(stream, client, passwd);
+                    }
+                    Err(err) => {
+                        /* connection failed */
+                        break;
+                    }
+                }
+            }
+        } else {
+            panic!("failed to open a socket")
+        }
+    }
+}
+
 fn main() {
+
+    let home_dir = home_dir().expect("Cannot find the home directory");
+    let home_dir = home_dir.display();
 
     let APP_VERSION = "1.0.0";
     let APP_NAME = "smtpd";
@@ -33,14 +106,16 @@ fn main() {
     let USAGE = format!("
     {}
 
-    Usage: {} --passwordeval CMD
-           {} --help
-           {} --version
+    Usage: {0}
+           {0} --smtpdrc=<string>
+           {0} --help
+           {0} --version
 
     Options:
+        --smtpdrc=<string>       Path to the smtpdrc [default: {}/.smtpdrc]
         -h, --help               Show this help.
         -v, --version            Show the version.
-    ", APP_NAME, APP_NAME, APP_NAME, APP_NAME);
+    ", APP_NAME, home_dir);
 
     let args: Args = Docopt::new(USAGE.clone())
         .and_then(|d| d.deserialize())
@@ -48,62 +123,16 @@ fn main() {
 
     if args.flag_version {
         println!("{}, v {}", APP_NAME, APP_VERSION);
-        process::exit(0);
+        exit(0);
     }
 
     if args.flag_help {
         println!("{}", USAGE);
-        process::exit(0);
+        exit(0);
     }
 
-    if let Some(arg_CMD) = args.arg_CMD {
-        if let Ok(result) = Command::new("sh").arg("-c").arg(arg_CMD).stdout(Stdio::piped()).spawn() {
-            let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
-            let mut output = String::new();
-            child_stdout.read_to_string(&mut output);
+    let conf = read_config(&args.flag_smtpdrc);
 
-            let passwd = output.trim();
-
-            // close the socket, if it exists
-            fs::remove_file(SOCKET_PATH);
-
-            if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
-
-                for stream in listener.incoming() {
-                    match stream {
-                        Ok(mut stream) => {
-                          let mut mail = String::new();
-                          stream.read_to_string(&mut mail).unwrap();
-                          let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
-                          let recipients: Vec<String> = mail.recipients;
-                          let body = mail.body;
-
-                          let msmtp = Command::new("msmtp")
-                              .arg(format!("--passwordeval=echo {}", passwd))
-                              .args(recipients)
-                              .stdin(Stdio::piped())
-                              .stdout(Stdio::null())
-                              .spawn()
-                              .expect("Failed to start msmtp process");
-
-                          match msmtp.stdin.unwrap().write_all(body.as_slice()) {
-                             Err(why) => panic!("couldn't write to msmtp stdin: {}", why.description()),
-                             Ok(_) => println!("email sent to msmtp"),
-                          }
-
-                        }
-                        Err(err) => {
-                            /* connection failed */
-                            break;
-                        }
-                    }
-                }
-            } else {
-                panic!("failed to open a socket")
-            }
-        }
-    } else {
-        println!("{}", USAGE);
-        process::exit(1);
-    }
+    start_daemon(conf);
 }
+

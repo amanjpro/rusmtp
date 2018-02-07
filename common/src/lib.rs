@@ -7,4 +7,10 @@ pub struct Mail {
     pub body: Vec<u8>,
 }
 
+
+pub struct Configuration {
+    pub passwordeval: String,
+    pub smtpclient: String,
+}
+
 pub static SOCKET_PATH: &'static str = "smtp-daemon-socket";

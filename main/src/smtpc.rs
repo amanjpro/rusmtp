@@ -11,7 +11,6 @@ use std::io::{self, Read};
 
 fn main () {
     let mut full_args: Vec<String> = env::args().collect();
-    println!("{:?}", full_args);
     full_args.remove(0);
 
     let mut body: Vec<u8> = Vec::new();
@@ -26,6 +25,6 @@ fn main () {
     let msg =serde_json::to_string(&mail)
         .expect("Cannot generate JSON for the given message");
 
-    let mut stream = UnixStream::connect(SOCKET_PATH).unwrap();
+    let mut stream = UnixStream::connect(SOCKET_PATH).expect("The daemon is not running, please start it.");
     stream.write_all(msg.as_bytes()).unwrap();
 }
