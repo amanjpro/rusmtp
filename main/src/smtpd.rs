@@ -48,17 +48,17 @@ fn send_mail(mut stream: UnixStream, client: &str, passwd: &str) {
     let recipients: Vec<String> = mail.recipients;
     let body = mail.body;
 
-    let msmtp = Command::new(client)
+    let smtp = Command::new(client)
       .arg(format!("--passwordeval=echo {}", passwd))
       .args(recipients)
       .stdin(Stdio::piped())
       .stdout(Stdio::null())
       .spawn()
-      .expect("Failed to start msmtp process");
+      .expect("Failed to start smtp process");
 
-    match msmtp.stdin.unwrap().write_all(body.as_slice()) {
-        Err(why) => panic!("couldn't write to msmtp stdin: {}", why.description()),
-        Ok(_) => println!("email sent to msmtp"),
+    match smtp.stdin.unwrap().write_all(body.as_slice()) {
+        Err(why) => panic!("couldn't write to smtp stdin: {}", why.description()),
+        Ok(_) => println!("email sent to smtp"),
     }
 }
 
