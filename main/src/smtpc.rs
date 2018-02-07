@@ -4,10 +4,9 @@ extern crate common;
 
 
 use std::os::unix::net::UnixStream;
-use std::io::prelude::*;
 use common::{SOCKET_PATH, Mail};
 use std::env;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 
 fn main () {
     let mut full_args: Vec<String> = env::args().collect();
