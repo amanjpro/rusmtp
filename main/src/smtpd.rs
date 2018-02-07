@@ -100,7 +100,7 @@ fn main() {
     let home_dir = home_dir().expect("Cannot find the home directory");
     let home_dir = home_dir.display();
 
-    let APP_VERSION = "1.0.0";
+    let APP_VERSION = env!("CARGO_PKG_VERSION");
     let APP_NAME = "smtpd";
     // Define a USAGE string.
     let USAGE = format!("
