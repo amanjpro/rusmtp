@@ -1,8 +1,8 @@
 [package]
 name = "common"
 version = "0.1.0"
-authors = ["amanjpro <amanj.sherwany@adgear.com>"]
+authors = ["amanjpro <http://www.amanj.me>"]
 
 [dependencies]
-serde = "1.0" # if you're using `derive(Deserialize)`
-serde_derive = "1.0" # if you're using `derive(Deserialize)`
+serde = "1.0"
+serde_derive = "1.0"
