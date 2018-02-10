@@ -2,11 +2,13 @@ extern crate serde;
 extern crate serde_json;
 extern crate common;
 extern crate docopt;
+extern crate secstr;
 extern crate ini;
 
 #[macro_use]
 extern crate serde_derive;
 
+use secstr::SecStr;
 use common::{SOCKET_PATH, Mail, Configuration};
 
 use std::os::unix::net::{UnixStream, UnixListener};
@@ -14,7 +16,7 @@ use std::process::{exit, Command, Stdio};
 use std::io::{Read, Write};
 use std::env::home_dir;
 use std::error::Error;
-use std::fs;
+use std::{str,fs};
 
 use docopt::Docopt;
 use ini::Ini;
@@ -41,7 +43,7 @@ fn read_config(rc_path: &str) -> Configuration {
     }
 }
 
-fn send_mail(mut stream: UnixStream, client: &str, passwd: &str) {
+fn send_mail(mut stream: UnixStream, client: &str, passwd: &SecStr) {
     let mut mail = String::new();
     stream.read_to_string(&mut mail).unwrap();
     let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
@@ -49,7 +51,7 @@ fn send_mail(mut stream: UnixStream, client: &str, passwd: &str) {
     let body = mail.body;
 
     let smtp = Command::new(client)
-      .arg(format!("--passwordeval=echo {}", passwd))
+      .arg(format!("--passwordeval=echo {}", str::from_utf8(passwd.unsecure()).unwrap()))
       .args(recipients)
       .stdin(Stdio::piped())
       .stdout(Stdio::null())
@@ -71,7 +73,7 @@ fn start_daemon(conf: Configuration) {
         let mut output = String::new();
         child_stdout.read_to_string(&mut output);
 
-        let passwd = output.trim();
+        let passwd = SecStr::from(output.trim());
 
         // close the socket, if it exists
         fs::remove_file(SOCKET_PATH);
@@ -81,7 +83,7 @@ fn start_daemon(conf: Configuration) {
             for stream in listener.incoming() {
                 match stream {
                     Ok(mut stream) => {
-                      send_mail(stream, client, passwd);
+                      send_mail(stream, client, &passwd);
                     }
                     Err(err) => {
                         /* connection failed */
