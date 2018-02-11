@@ -1,3 +1,5 @@
+pub mod verbs;
+
 extern crate native_tls;
 extern crate base64;
 
