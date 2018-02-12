@@ -77,21 +77,20 @@ impl SMTPConnection {
 
 
     pub fn send_mail(&mut self, from: &str, recipients: &[&str], body: &str) {
-       SMTPConnection::send(&mut self.stream, format!("{} {}: <{}>\r\n", MAIL, FROM, from).as_bytes());
+       SMTPConnection::send(&mut self.stream, format!("{} {}:<{}>\r\n", MAIL, FROM, from).as_bytes());
        let responce = SMTPConnection::recieve(&mut self.stream);
        SMTPConnection::log(&responce);
        SMTPConnection::true_or_panic(
            responce.starts_with("250"),
            &format!("Cannot send email from {}", from));
-       SMTPConnection::send(&mut self.stream, format!("{} {}: ", RCPT, TO).as_bytes());
        for recipient in recipients.iter() {
-          SMTPConnection::send(&mut self.stream, format!("<{}>", recipient).as_bytes());
+          SMTPConnection::send(&mut self.stream, format!("{} {}:<{}>\r\n", RCPT, TO, recipient).as_bytes());
+          SMTPConnection::log(&responce);
+          SMTPConnection::true_or_panic(
+             responce.starts_with("250"),
+             &format!("Cannot send email to {}", recipient));
+
        }
-       SMTPConnection::send(&mut self.stream, b"\r\n");
-       SMTPConnection::log(&responce);
-       SMTPConnection::true_or_panic(
-           responce.starts_with("250"),
-           &format!("Cannot send email to {:?}", recipients));
 
        SMTPConnection::send(&mut self.stream, format!("{}\r\n", DATA).as_bytes());
        SMTPConnection::send(&mut self.stream, body.as_bytes());
