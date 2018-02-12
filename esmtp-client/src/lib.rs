@@ -89,7 +89,6 @@ impl SMTPConnection {
           SMTPConnection::true_or_panic(
              responce.starts_with("250"),
              &format!("Cannot send email to {}", recipient));
-
        }
 
        SMTPConnection::send(&mut self.stream, format!("{}\r\n", DATA).as_bytes());
@@ -98,7 +97,7 @@ impl SMTPConnection {
        SMTPConnection::log(&responce);
        SMTPConnection::true_or_panic(
            responce.starts_with("250"),
-           &format!("Cannot send email to {:?}", recipients));
+           "Failed to send email");
     }
 
     fn log(msg: &str) {
