@@ -76,7 +76,7 @@ impl SMTPConnection {
     }
 
 
-    pub fn send_mail(&mut self, from: &str, recipients: &[&str], body: &str) {
+    pub fn send_mail(&mut self, from: &str, recipients: &[&str], body: &[u8]) {
        SMTPConnection::send(&mut self.stream, format!("{} {}:<{}>\r\n", MAIL, FROM, from).as_bytes());
        let responce = SMTPConnection::recieve(&mut self.stream);
        SMTPConnection::log(&responce);
@@ -92,7 +92,7 @@ impl SMTPConnection {
        }
 
        SMTPConnection::send(&mut self.stream, format!("{}\r\n", DATA).as_bytes());
-       SMTPConnection::send(&mut self.stream, body.as_bytes());
+       SMTPConnection::send(&mut self.stream, body);
        SMTPConnection::send(&mut self.stream, b"\r\n.\r\n");
        SMTPConnection::log(&responce);
        SMTPConnection::true_or_panic(
