@@ -24,30 +24,47 @@ pub struct Configuration {
 pub fn read_config(rc_path: &str) -> Configuration {
     let conf = Ini::load_from_file(rc_path).unwrap();
 
-    let section = conf.section(Some("Daemon".to_owned())).unwrap();
-    let eval = section.get("passwordeval").unwrap();
+    let section = conf.section(Some("Daemon".to_owned()))
+        .expect("SMTP Daemon section is missing in the configuration");
+
+    let eval = section.get("passwordeval")
+        .expect("passwordeval is missing in the configuration");
     let smtp = section.get("smtp").map(|s| s.to_string());
 
-    let section  = conf.section(Some("SMTP".to_owned())).unwrap();
-    let username = section.get("username").map(|s| s.to_string());
-    let host     = section.get("host").map(|s| s.to_string());
-    let port     = section.get("port").map(|p| {
-        let port: u16 = p.parse().unwrap();
-        port
-    });
+    match conf.section(Some("SMTP".to_owned())) {
+        Some(section)     => {
+                let username = section.get("username").map(|s| s.to_string());
+                let host     = section.get("host").map(|s| s.to_string());
+                let port     = section.get("port").map(|p| {
+                    let port: u16 = p.parse()
+                        .expect("Invalid port number value in configuration");
+                    port
+                });
 
-    let tls      = section.get("tls").map(|p| {
-        let port: bool = p.parse().unwrap();
-        port
-    });
+                let tls      = section.get("tls").map(|p| {
+                    let tls: bool = p.parse()
+                        .expect("Invalid tls value in configuration (valid: false | true)");
+                    tls
+                });
 
-    Configuration {
-        passwordeval: eval.to_string(),
-        smtpclient: smtp,
-        username: username,
-        host: host,
-        port: port,
-        tls: tls,
+                Configuration {
+                    passwordeval: eval.to_string(),
+                    smtpclient: smtp,
+                    username: username,
+                    host: host,
+                    port: port,
+                    tls: tls,
+                }
+            },
+        None             =>
+            Configuration {
+                passwordeval: eval.to_string(),
+                smtpclient: smtp,
+                username: None,
+                host: None,
+                port: None,
+                tls: None,
+            },
     }
 }
 
