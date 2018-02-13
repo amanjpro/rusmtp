@@ -30,19 +30,6 @@ struct Args {
     flag_version: bool,
 }
 
-fn read_config(rc_path: &str) -> Configuration {
-    let conf = Ini::load_from_file(rc_path).unwrap();
-
-    let section = conf.section(Some("Daemon".to_owned())).unwrap();
-    let eval = section.get("passwordeval").unwrap();
-    let smtp = section.get("smtp").unwrap();
-
-    Configuration {
-        passwordeval: eval.to_string(),
-        smtpclient: smtp.to_string(),
-    }
-}
-
 fn send_mail(mut stream: UnixStream, client: &str, passwd: &SecStr) {
     let mut mail = String::new();
     stream.read_to_string(&mut mail).unwrap();
