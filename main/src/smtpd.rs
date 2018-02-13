@@ -3,7 +3,6 @@ extern crate serde_json;
 extern crate common;
 extern crate docopt;
 extern crate secstr;
-extern crate ini;
 
 #[macro_use]
 extern crate serde_derive;
@@ -19,7 +18,6 @@ use std::error::Error;
 use std::{str,fs};
 
 use docopt::Docopt;
-use ini::Ini;
 
 
 // Define the struct that results from those options.
