@@ -142,14 +142,6 @@ impl SMTPConnection {
     fn send(stream: &mut TlsStream<TcpStream>, msg: &[u8]) {
         let _ = stream.write(msg);
     }
-
-    fn extract_msg(reply: &[u8]) -> String {
-        let mut iter = std::str::from_utf8(&reply).expect("Cannot decode the message")
-            .splitn(2, " ");
-        let _ = iter.next();
-
-        iter.next().expect("Cannot get the message").to_string()
-    }
 }
 
 fn main() {
