@@ -3,12 +3,14 @@ extern crate serde_json;
 extern crate common;
 extern crate docopt;
 extern crate secstr;
+extern crate esmtp_client;
 
 #[macro_use]
 extern crate serde_derive;
 
 use secstr::SecStr;
 use common::{SOCKET_PATH, Mail, Configuration, read_config};
+use esmtp_client::SMTPConnection;
 
 use std::os::unix::net::{UnixStream, UnixListener};
 use std::process::{exit, Command, Stdio};
@@ -58,7 +60,8 @@ fn start_daemon(conf: Configuration) {
         let mut output = String::new();
         child_stdout.read_to_string(&mut output);
 
-        let passwd = SecStr::from(output.trim());
+        let mut passwd = SecStr::from(output.trim());
+        output.clear();
 
         // close the socket, if it exists
         fs::remove_file(SOCKET_PATH);
@@ -82,7 +85,37 @@ fn start_daemon(conf: Configuration) {
                 } else {
                     panic!("failed to open a socket")
                 },
-            None         => ()
+            None         => {
+                let host     = conf.host.expect("Please configure the SMTP host");
+                let username = conf.username.expect("Please configure the username");
+                let port     = conf.port.expect("Please configure the port");
+
+                let mut mailer = SMTPConnection::open_connection(&host, port);
+                mailer.login(&SecStr::from(username.clone()), &passwd);
+                passwd.zero_out();
+                if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+
+                    for stream in listener.incoming() {
+                        match stream {
+                            Ok(mut stream) => {
+                                let mut mail = String::new();
+                                stream.read_to_string(&mut mail).unwrap();
+                                let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
+                                let recipients: Vec<&str> = mail.recipients.iter().map(|s| &**s).collect();
+                                let body = mail.body;
+                                mailer.send_mail(&username, &recipients, &body);
+                            }
+                            Err(err) => {
+                                /* connection failed */
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    panic!("failed to open a socket")
+                }
+            },
+
         }
     }
 }
