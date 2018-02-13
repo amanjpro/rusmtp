@@ -95,10 +95,13 @@ impl SMTPConnection {
               &format!("Cannot send email to {}", recipient));
        }
 
-       SMTPConnection::send(&mut self.stream, format!("{}\r\n", DATA).as_bytes());
+       SMTPConnection::send_and_check(&mut self.stream, format!("{}\r\n", DATA).as_bytes(),
+              &|responce| responce.starts_with("354"),
+              &format!("Cannot start sending email"));
+
        SMTPConnection::send(&mut self.stream, body);
        SMTPConnection::send_and_check(&mut self.stream, b"\r\n.\r\n",
-           &|responce| responce.starts_with("354"),
+           &|responce| responce.starts_with("250"),
            "Failed to send email");
     }
 
