@@ -10,7 +10,11 @@ pub struct Mail {
 
 pub struct Configuration {
     pub passwordeval: String,
-    pub smtpclient: String,
+    pub smtpclient: Option<String>,
+    pub username: Option<String>,
+    pub host: Option<String>,
+    pub port: Option<u16>,
+    pub tls: Option<bool>,
 }
 
 pub fn read_config(rc_path: &str) -> Configuration {
@@ -19,6 +23,11 @@ pub fn read_config(rc_path: &str) -> Configuration {
     let section = conf.section(Some("Daemon".to_owned())).unwrap();
     let eval = section.get("passwordeval").unwrap();
     let smtp = section.get("smtp").unwrap();
+
+    let section = conf.section(Some("SMTP".to_owned())).unwrap();
+    let username = section.get("username").unwrap();
+    let host = section.get("host").parse().unwrap());
+    let port = section.get("port").unwrap();
 
     Configuration {
         passwordeval: eval.to_string(),
