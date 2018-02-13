@@ -1,3 +1,8 @@
 [Daemon]
 passwordeval=echo password
-smtp=/usr/local/bin/msmtp
+
+[SMTP]
+host=smtp.gmail.com
+username=amanjpro@gmail.com
+port=465
+tls=true
