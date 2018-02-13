@@ -8,7 +8,7 @@ extern crate secstr;
 extern crate serde_derive;
 
 use secstr::SecStr;
-use common::{SOCKET_PATH, Mail, Configuration};
+use common::{SOCKET_PATH, Mail, Configuration, read_config};
 
 use std::os::unix::net::{UnixStream, UnixListener};
 use std::process::{exit, Command, Stdio};
@@ -51,7 +51,7 @@ fn send_mail(mut stream: UnixStream, client: &str, passwd: &SecStr) {
 
 fn start_daemon(conf: Configuration) {
     let eval = &conf.passwordeval;
-    let client = &conf.smtpclient;
+    let client = conf.smtpclient;
 
     if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
         let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
@@ -63,21 +63,26 @@ fn start_daemon(conf: Configuration) {
         // close the socket, if it exists
         fs::remove_file(SOCKET_PATH);
 
-        if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+        match client {
 
-            for stream in listener.incoming() {
-                match stream {
-                    Ok(mut stream) => {
-                      send_mail(stream, client, &passwd);
+            Some(client) =>
+                if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+
+                    for stream in listener.incoming() {
+                        match stream {
+                            Ok(mut stream) => {
+                              send_mail(stream, &client, &passwd);
+                            }
+                            Err(err) => {
+                                /* connection failed */
+                                break;
+                            }
+                        }
                     }
-                    Err(err) => {
-                        /* connection failed */
-                        break;
-                    }
-                }
-            }
-        } else {
-            panic!("failed to open a socket")
+                } else {
+                    panic!("failed to open a socket")
+                },
+            None         => ()
         }
     }
 }
