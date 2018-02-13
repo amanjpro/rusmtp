@@ -1,5 +1,5 @@
 [package]
-name = "esmtp-client"
+name = "esmtp_client"
 version = "1.0.0-SNAPSHOT"
 authors = ["amanjpro <http://www.amanj.me>"]
 
