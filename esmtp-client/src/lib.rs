@@ -67,15 +67,15 @@ impl SMTPConnection {
         }
     }
 
-    pub fn login(&mut self, username: SecStr, passwd: SecStr) {
+    pub fn login(&mut self, username: &SecStr, passwd: &SecStr) {
        SMTPConnection::send(&mut self.stream, format!("{} {}\n", AUTH, LOGIN).as_bytes());
        let responce = SMTPConnection::recieve(&mut self.stream);
        SMTPConnection::log(&responce);
-       SMTPConnection::send(&mut self.stream, &encode(username.unsecure()).as_bytes());
+       SMTPConnection::send(&mut self.stream, &encode(&username.unsecure()).as_bytes());
        SMTPConnection::send(&mut self.stream, b"\n");
        let responce = SMTPConnection::recieve(&mut self.stream);
        SMTPConnection::log(&responce);
-       SMTPConnection::send(&mut self.stream, &encode(passwd.unsecure()).as_bytes());
+       SMTPConnection::send(&mut self.stream, &encode(&passwd.unsecure()).as_bytes());
        SMTPConnection::send_and_check(&mut self.stream, b"\n",
            &|responce| responce.starts_with("235"),
            "Invalid username or password");
