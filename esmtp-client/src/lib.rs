@@ -42,13 +42,22 @@ impl SMTPConnection {
             responce.starts_with("220") && responce.contains("ESMTP"),
             &format!("SMTP Server {} is not accepting clients", host));
 
-        SMTPConnection::send(&mut stream, EHLO.as_bytes());
-        SMTPConnection::send(&mut stream, b" smtp.amanj.me\n");
-        let responce = SMTPConnection::recieve(&mut stream);
-        SMTPConnection::log(&responce);
-        SMTPConnection::true_or_panic(
-            responce.starts_with("250"),
+        SMTPConnection::send_and_check(&mut stream,
+            &format!("{} smtp.amanj.me\n", EHLO).as_bytes(),
+            &|responce| responce.starts_with("250"),
             &format!("SMTP Server {} does not support ESMTP", host));
+
+        if responce.contains(STARTTLS) {
+            SMTPConnection::send_and_check(&mut stream,
+                &format!("{} smtp.amanj.me\n", STARTTLS).as_bytes(),
+                &|responce| responce.starts_with("250"),
+                &format!("Cannot start a TLS connection"));
+
+            SMTPConnection::send_and_check(&mut stream,
+                &format!("{} smtp.amanj.me\n", EHLO).as_bytes(),
+                &|responce| responce.starts_with("250"),
+                &format!("SMTP Server {} does not support ESMTP", host));
+        }
 
 
         SMTPConnection {
@@ -67,37 +76,42 @@ impl SMTPConnection {
        let responce = SMTPConnection::recieve(&mut self.stream);
        SMTPConnection::log(&responce);
        SMTPConnection::send(&mut self.stream, &encode(passwd.unsecure()).as_bytes());
-       SMTPConnection::send(&mut self.stream, b"\n");
-       let responce = SMTPConnection::recieve(&mut self.stream);
-       SMTPConnection::log(&responce);
-       SMTPConnection::true_or_panic(
-           responce.starts_with("235"),
+       SMTPConnection::send_and_check(&mut self.stream, b"\n",
+           &|responce| responce.starts_with("235"),
            "Invalid username or password");
     }
 
 
     pub fn send_mail(&mut self, from: &str, recipients: &[&str], body: &[u8]) {
-       SMTPConnection::send(&mut self.stream, format!("{} {}:<{}>\r\n", MAIL, FROM, from).as_bytes());
-       let responce = SMTPConnection::recieve(&mut self.stream);
-       SMTPConnection::log(&responce);
-       SMTPConnection::true_or_panic(
-           responce.starts_with("250"),
+       SMTPConnection::send_and_check(&mut self.stream,
+          format!("{} {}:<{}>\r\n", MAIL, FROM, from).as_bytes(),
+           &|responce| responce.starts_with("250"),
            &format!("Cannot send email from {}", from));
+
        for recipient in recipients.iter() {
-          SMTPConnection::send(&mut self.stream, format!("{} {}:<{}>\r\n", RCPT, TO, recipient).as_bytes());
-          SMTPConnection::log(&responce);
-          SMTPConnection::true_or_panic(
-             responce.starts_with("250"),
-             &format!("Cannot send email to {}", recipient));
+          SMTPConnection::send_and_check(&mut self.stream,
+              format!("{} {}:<{}>\r\n", RCPT, TO, recipient).as_bytes(),
+              &|responce| responce.starts_with("250"),
+              &format!("Cannot send email to {}", recipient));
        }
 
        SMTPConnection::send(&mut self.stream, format!("{}\r\n", DATA).as_bytes());
        SMTPConnection::send(&mut self.stream, body);
-       SMTPConnection::send(&mut self.stream, b"\r\n.\r\n");
+       SMTPConnection::send_and_check(&mut self.stream, b"\r\n.\r\n",
+           &|responce| responce.starts_with("354"),
+           "Failed to send email");
+    }
+
+    fn send_and_check(mut stream: &mut TlsStream<TcpStream>, msg: &[u8],
+                      check: &Fn(&str) -> bool,
+                      on_failure_msg: &str) {
+       SMTPConnection::send(&mut stream, msg);
+       let responce = SMTPConnection::recieve(&mut stream);
        SMTPConnection::log(&responce);
        SMTPConnection::true_or_panic(
-           responce.starts_with("250"),
-           "Failed to send email");
+           check(&responce),
+           on_failure_msg);
+
     }
 
     fn log(msg: &str) {
