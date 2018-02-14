@@ -1,5 +1,7 @@
 [Daemon]
 passwordeval=echo password
+# custom smtp clients
+# smtp=/path/to/custom/smtp/client
 
 [SMTP]
 host=smtp.gmail.com
