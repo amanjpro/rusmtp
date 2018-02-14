@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -o errexit -o nounset -o pipefail
+
+cp smtpd /usr/local/bin/smtpd
+cp smtpc /usr/local/bin/smtpc
+cp smtprc.default "$HOME"/.smtprc
