@@ -24,13 +24,12 @@ the connection).
 
 ## Installation
 
-- Clone the repo, and run `sudo ./install`, this installs the binaries
-  on `/usr/local/bin/{smtpc,smtpd}`. You need rust stable to perform
-  this step.
-
+- Download the latest release
+  [here](https://github.com/amanjpro/smtp-daemon/releases), extract it and run
+  `sudo ./install`, it copies the executables to `/usr/local/bin/{smtpc,smtpd}`
 - Update the `~/.smtpdrc` file to match your preferences, for example
   the passwordeval setting can be:
   `passwordeval=gpg --quiet --no-tty --decrypt /path/to/encrypted-password.gpg`
-- Update your client configuration to use `/usr/local/bin/smtpc` for
+- Update your email-client configuration to use `/usr/local/bin/smtpc` for
   sending emails.
 - Make the `/usr/local/bin/smtpd` daemon to run on startup.
