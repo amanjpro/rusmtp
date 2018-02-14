@@ -91,7 +91,11 @@ fn start_daemon(conf: Configuration) {
                 let port     = conf.port.expect("Please configure the port");
 
                 let mut mailer = SMTPConnection::open_connection(&host, port);
-                mailer.login(&SecStr::from(username.clone()), &passwd);
+
+                if mailer.supports_login {
+                    mailer.login(&SecStr::from(username.clone()), &passwd);
+                }
+
                 passwd.zero_out();
                 if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
 

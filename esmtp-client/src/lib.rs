@@ -14,8 +14,8 @@ use std::net::{TcpStream, ToSocketAddrs, IpAddr};
 
 pub struct SMTPConnection {
     stream: TlsStream<TcpStream>,
-    supports_login: bool,
-    supports_xoauth2: bool,
+    pub supports_login: bool,
+    pub supports_xoauth2: bool,
 }
 
 impl SMTPConnection {
@@ -38,11 +38,12 @@ impl SMTPConnection {
         let responce = SMTPConnection::recieve(&mut stream);
 
         SMTPConnection::log(&responce);
+
         SMTPConnection::true_or_panic(
             responce.starts_with("220") && responce.contains("ESMTP"),
             &format!("SMTP Server {} is not accepting clients", host));
 
-        SMTPConnection::send_and_check(&mut stream,
+        let responce = SMTPConnection::send_and_check(&mut stream,
             &format!("{} smtp.amanj.me\n", EHLO).as_bytes(),
             &|responce| responce.starts_with("250"),
             &format!("SMTP Server {} does not support ESMTP", host));
@@ -107,14 +108,14 @@ impl SMTPConnection {
 
     fn send_and_check(mut stream: &mut TlsStream<TcpStream>, msg: &[u8],
                       check: &Fn(&str) -> bool,
-                      on_failure_msg: &str) {
+                      on_failure_msg: &str) -> String {
        SMTPConnection::send(&mut stream, msg);
        let responce = SMTPConnection::recieve(&mut stream);
        SMTPConnection::log(&responce);
        SMTPConnection::true_or_panic(
            check(&responce),
            on_failure_msg);
-
+       responce
     }
 
     fn log(msg: &str) {
