@@ -11,6 +11,7 @@ pub struct Mail {
     pub body: Vec<u8>,
 }
 
+const DEFAULT_HEARTBEAT_IN_MINUTES: u8 = 3;
 
 pub struct Configuration {
     pub passwordeval: String,
@@ -19,6 +20,7 @@ pub struct Configuration {
     pub host: Option<String>,
     pub port: Option<u16>,
     pub tls: Option<bool>,
+    pub heartbeat: u8,
 }
 
 pub fn read_config(rc_path: &str) -> Configuration {
@@ -47,6 +49,13 @@ pub fn read_config(rc_path: &str) -> Configuration {
                     tls
                 });
 
+                let heartbeat      = section.get("heartbeat").map(|p| {
+                    let heartbeat: u8 = p.parse()
+                        .expect("Invalid u8 value in configuration");
+                    heartbeat
+                }).unwrap_or(DEFAULT_HEARTBEAT_IN_MINUTES);
+
+
                 Configuration {
                     passwordeval: eval.to_string(),
                     smtpclient: smtp,
@@ -54,6 +63,7 @@ pub fn read_config(rc_path: &str) -> Configuration {
                     host: host,
                     port: port,
                     tls: tls,
+                    heartbeat: heartbeat,
                 }
             },
         None             =>
@@ -64,6 +74,7 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 host: None,
                 port: None,
                 tls: None,
+                heartbeat: DEFAULT_HEARTBEAT_IN_MINUTES,
             },
     }
 }

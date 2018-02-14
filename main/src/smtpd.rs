@@ -103,8 +103,9 @@ fn start_daemon(conf: Configuration) {
 
                 {
                     let mailer = mailer.clone();
+                    let heartbeat = conf.heartbeat as u64;
                     thread::spawn(move || {
-                        let sleep_time = Duration::from_secs(3 * 60);
+                        let sleep_time = Duration::from_secs(heartbeat * 60);
                         loop {
                             mailer.lock().expect("Cannot get the mailer instance to keep it alive")
                                 .keep_alive(); thread::sleep(sleep_time)

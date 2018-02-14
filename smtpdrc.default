@@ -6,3 +6,4 @@ host=smtp.gmail.com
 username=amanjpro@gmail.com
 port=465
 tls=true
+heartbeat=3
