@@ -5,7 +5,7 @@ passwordeval=echo password
 
 [SMTP]
 host=smtp.gmail.com
-username=amanjpro@gmail.com
+username=username@gmail.com
 port=465
 tls=true
 heartbeat=3
