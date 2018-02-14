@@ -38,7 +38,7 @@ archive() {
   cp COPYING smtp-daemon-"$RELEASE_VERSION"/
   cp README.md smtp-daemon-"$RELEASE_VERSION"/
 
-  tar -czf archive/* smtp-daemon-"$RELEASE_VERSION".tar.gz
+  tar -czf smtp-daemon-"$RELEASE_VERSION".tar.gz smtp-daemon-"$RELEASE_VERSION"/*
 }
 
 
