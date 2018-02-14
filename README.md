@@ -11,10 +11,18 @@ This consists of two parts, a server that tries to get the password upon
 starting (maybe decrypting it from gpg?), and a client that sends the
 email to be sent to the server.
 
-The server then launches an SMTP client (configurable) and passes the
-unencrypted password to it.
+By default the daemon uses a builtin SMTP client that maintains the connection
+with the SMTP server, does not keep the unencrypted password in memory. The
+builtin SMTP client uses a secure connection (TLS) whenever available. If you
+are sick with the builtin client or you are fine to keep the password
+unencrypted in the memory, then you can configure the daemon to launch a
+third-party SMTP client without losing any convenience.
 
-# Installation
+At its current state, the builtin SMTP client only supports ESMTP and
+only supports LOGIN (i.e. it uses username and password to authenticate
+the connection).
+
+## Installation
 
 - Clone the repo, and run `sudo ./install`, this installs the binaries
   on `/usr/local/bin/{smtpc,smtpd}`. You need rust stable to perform

@@ -1,3 +1,11 @@
 [Daemon]
 passwordeval=echo password
-smtp=/usr/local/bin/msmtp
+# custom smtp clients
+# smtp=/path/to/custom/smtp/client
+
+[SMTP]
+host=smtp.gmail.com
+username=amanjpro@gmail.com
+port=465
+tls=true
+heartbeat=3
