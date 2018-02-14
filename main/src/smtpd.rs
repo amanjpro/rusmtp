@@ -21,6 +21,7 @@ use std::{str,fs};
 use std::thread;
 use std::time::Duration;
 use std::sync::{Mutex, Arc};
+use std::ops::Deref;
 
 use docopt::Docopt;
 
@@ -121,7 +122,7 @@ fn start_daemon(conf: Configuration) {
                                 let mut mail = String::new();
                                 stream.read_to_string(&mut mail).unwrap();
                                 let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
-                                let recipients: Vec<&str> = mail.recipients.iter().filter(|&s| s != "--").map(|s| &**s).collect();
+                                let recipients: Vec<&str> = mail.recipients.iter().filter(|&s| s != "--").map(|s| s.deref()).collect();
                                 let body = mail.body;
                                 mailer.lock().expect("Cannot get the mailer instance to send an email")
                                     .send_mail(&username, &recipients, &body);
