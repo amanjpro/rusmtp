@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+set -o errexit -o nounset -o pipefail
+
+if test -z RELEASE_VERSION; then
+  echo "You must pass the version to be released"
+  exit 1
+fi
+
+RELEASE_VERSION="$1"
+MINOR_VERSION=$(echo "$RELEASE_VERSION" | sed 's/^.*\.\(.*\)\..*$/\1/g')
+NEXT_MINOR_VERSION=$((MINOR_VERSION + 1))
+MAJOR_VERSION=$(echo "$RELEASE_VERSION" | sed 's/^\(.*\)\..*\..*$/\1/g')
+NEXT_SNAPSHOT_VERSION="$MAJOR_VERSION.$NEXT_MINOR_VERSION.0-SNAPSHOT"
+
+# Update Cargo versions
+
+update_cargo() {
+  local path="$1"
+  local version="$2"
+  sed "s/^version = \".*\"$/version = \"$version\"/g" <"$path" >tmp
+  mv tmp "$path"
+}
+
+build() {
+  # Compile the project
+  cargo update
+  cargo build --release --manifest-path main/Cargo.toml
+}
+
+archive() {
+  rm -rf smtp-daemon-"$RELEASE_VERSION"
+  mkdir smtp-daemon-"$RELEASE_VERSION"
+  cp target/release/smtpc smtp-daemon-"$RELEASE_VERSION"/
+  cp target/release/smtpd smtp-daemon-"$RELEASE_VERSION"/
+  cp smtpdrc.default smtp-daemon-"$RELEASE_VERSION"/
+  cp install smtp-daemon-"$RELEASE_VERSION"/
+  cp COPYING smtp-daemon-"$RELEASE_VERSION"/
+  cp README.md smtp-daemon-"$RELEASE_VERSION"/
+
+  tar -czf archive/* smtp-daemon-"$RELEASE_VERSION".tar.gz
+}
+
+
+update_cargo "main/Cargo.toml" "$RELEASE_VERSION"
+update_cargo "esmtp-client/Cargo.toml" "$RELEASE_VERSION"
+update_cargo "common/Cargo.toml" "$RELEASE_VERSION"
+
+build
+
+
+git add {main,esmtp-client,common}/Cargo.toml
+git commit -m "Bump version to $RELEASE_VERSION"
+git tag -a "$RELEASE_VERSION" -m "Release $RELEASE_VERSION"
+
+archive
+
+update_cargo "main/Cargo.toml" "$NEXT_SNAPSHOT_VERSION"
+update_cargo "esmtp-client/Cargo.toml" "$NEXT_SNAPSHOT_VERSION"
+update_cargo "common/Cargo.toml" "$NEXT_SNAPSHOT_VERSION"
+
+build
+
+git add {main,esmtp-client,common}/Cargo.toml
+git commit -m "Bump version to $NEXT_SNAPSHOT_VERSION"
+
+git push origin HEAD
+git push --tags
