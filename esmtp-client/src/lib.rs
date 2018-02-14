@@ -153,6 +153,3 @@ impl SMTPConnection {
         let _ = stream.write(msg);
     }
 }
-
-fn main() {
-}
