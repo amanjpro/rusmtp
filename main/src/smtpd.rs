@@ -18,6 +18,9 @@ use std::io::{Read, Write};
 use std::env::home_dir;
 use std::error::Error;
 use std::{str,fs};
+use std::thread;
+use std::time::Duration;
+use std::sync::{Mutex, Arc};
 
 use docopt::Docopt;
 
@@ -96,6 +99,18 @@ fn start_daemon(conf: Configuration) {
                     mailer.login(&SecStr::from(username.clone()), &passwd);
                 }
 
+                let mut mailer = Arc::new(Mutex::new(mailer));
+
+                {
+                    let mailer = mailer.clone();
+                    thread::spawn(move || {
+                        let sleep_time = Duration::from_secs(3 * 60);
+                        loop {
+                            mailer.lock().expect("Cannot get the mailer instance to keep it alive")
+                                .keep_alive(); thread::sleep(sleep_time)
+                        }
+                    });
+                }
                 passwd.zero_out();
                 if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
 
@@ -107,7 +122,8 @@ fn start_daemon(conf: Configuration) {
                                 let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
                                 let recipients: Vec<&str> = mail.recipients.iter().filter(|&s| s != "--").map(|s| &**s).collect();
                                 let body = mail.body;
-                                mailer.send_mail(&username, &recipients, &body);
+                                mailer.lock().expect("Cannot get the mailer instance to send an email")
+                                    .send_mail(&username, &recipients, &body);
                             }
                             Err(err) => {
                                 /* connection failed */

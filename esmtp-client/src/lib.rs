@@ -82,6 +82,12 @@ impl SMTPConnection {
            "Invalid username or password");
     }
 
+    pub fn keep_alive(&mut self) {
+        SMTPConnection::send_and_check(&mut self.stream, &format!("{}\n", NOOP).as_bytes(),
+           &|responce| responce.starts_with("250"),
+           "Connection is with the server is lost");
+    }
+
 
     pub fn send_mail(&mut self, from: &str, recipients: &[&str], body: &[u8]) {
        SMTPConnection::send_and_check(&mut self.stream,
