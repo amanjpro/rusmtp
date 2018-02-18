@@ -73,9 +73,58 @@ fn external_smtp_client(client: &str, passwd: &SecStr) {
     }
 }
 
+fn default_smtp_client(conf: Configuration, passwd: &mut SecStr) {
+    let host     = conf.host.expect("Please configure the SMTP host");
+    let username = conf.username.expect("Please configure the username");
+    let port     = conf.port.expect("Please configure the port");
+
+    let mut mailer = SMTPConnection::open_connection(&host, port);
+
+    if mailer.supports_login {
+        mailer.login(&SecStr::from(username.clone()), &passwd);
+    }
+
+    let mut mailer = Arc::new(Mutex::new(mailer));
+
+    {
+        let mailer = mailer.clone();
+        let heartbeat = conf.heartbeat as u64;
+        thread::spawn(move || {
+            let sleep_time = Duration::from_secs(heartbeat * 60);
+            loop {
+                mailer.lock().expect("Cannot get the mailer instance to keep it alive")
+                    .keep_alive(); thread::sleep(sleep_time)
+            }
+        });
+    }
+    passwd.zero_out();
+    if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+
+        for stream in listener.incoming() {
+            match stream {
+                Ok(mut stream) => {
+                    let mut mail = String::new();
+                    stream.read_to_string(&mut mail).unwrap();
+                    let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
+                    let recipients: Vec<&str> = mail.recipients.iter().filter(|&s| s != "--").map(|s| s.deref()).collect();
+                    let body = mail.body;
+                    mailer.lock().expect("Cannot get the mailer instance to send an email")
+                        .send_mail(&username, &recipients, &body);
+                }
+                Err(err) => {
+                    /* connection failed */
+                    break;
+                }
+            }
+        }
+    } else {
+        panic!("failed to open a socket")
+    }
+}
+
 fn start_daemon(conf: Configuration) {
     let eval = &conf.passwordeval;
-    let client = conf.smtpclient;
+    let client = conf.smtpclient.clone();
 
     if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
         let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
@@ -92,55 +141,8 @@ fn start_daemon(conf: Configuration) {
 
             Some(client) =>
                 external_smtp_client(&client, &passwd),
-            None         => {
-                let host     = conf.host.expect("Please configure the SMTP host");
-                let username = conf.username.expect("Please configure the username");
-                let port     = conf.port.expect("Please configure the port");
-
-                let mut mailer = SMTPConnection::open_connection(&host, port);
-
-                if mailer.supports_login {
-                    mailer.login(&SecStr::from(username.clone()), &passwd);
-                }
-
-                let mut mailer = Arc::new(Mutex::new(mailer));
-
-                {
-                    let mailer = mailer.clone();
-                    let heartbeat = conf.heartbeat as u64;
-                    thread::spawn(move || {
-                        let sleep_time = Duration::from_secs(heartbeat * 60);
-                        loop {
-                            mailer.lock().expect("Cannot get the mailer instance to keep it alive")
-                                .keep_alive(); thread::sleep(sleep_time)
-                        }
-                    });
-                }
-                passwd.zero_out();
-                if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
-
-                    for stream in listener.incoming() {
-                        match stream {
-                            Ok(mut stream) => {
-                                let mut mail = String::new();
-                                stream.read_to_string(&mut mail).unwrap();
-                                let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
-                                let recipients: Vec<&str> = mail.recipients.iter().filter(|&s| s != "--").map(|s| s.deref()).collect();
-                                let body = mail.body;
-                                mailer.lock().expect("Cannot get the mailer instance to send an email")
-                                    .send_mail(&username, &recipients, &body);
-                            }
-                            Err(err) => {
-                                /* connection failed */
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    panic!("failed to open a socket")
-                }
-            },
-
+            None         =>
+                default_smtp_client(conf.to_owned(), &mut passwd),
         }
     }
 }
