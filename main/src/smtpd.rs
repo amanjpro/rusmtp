@@ -9,7 +9,7 @@ extern crate esmtp_client;
 extern crate serde_derive;
 
 use secstr::SecStr;
-use common::{SOCKET_PATH, Mail, Configuration, read_config};
+use common::{SOCKET_PATH, OK_SIGNAL, ERROR_SIGNAL, Mail, Configuration, read_config};
 use esmtp_client::SMTPConnection;
 
 use std::os::unix::net::{UnixStream, UnixListener};
@@ -50,8 +50,14 @@ fn send_mail_with_external_client(mut stream: UnixStream, client: &str, passwd: 
       .expect("Failed to start smtp process");
 
     match smtp.stdin.unwrap().write_all(body.as_slice()) {
-        Err(why) => panic!("couldn't write to smtp stdin: {}", why.description()),
-        Ok(_) => println!("email sent to smtp"),
+        Err(why) => {
+            stream.write_all(ERROR_SIGNAL.as_bytes());
+            panic!("couldn't write to smtp stdin: {}", why.description());
+        },
+        Ok(_) => {
+            stream.write_all(OK_SIGNAL.as_bytes());
+            println!("email sent to smtp");
+        },
     }
 }
 
@@ -110,6 +116,7 @@ fn default_smtp_client(conf: Configuration, passwd: &mut SecStr) {
                     let body = mail.body;
                     mailer.lock().expect("Cannot get the mailer instance to send an email")
                         .send_mail(&username, &recipients, &body);
+                    stream.write_all(OK_SIGNAL.as_bytes());
                 }
                 Err(err) => {
                     /* connection failed */
