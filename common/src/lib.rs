@@ -80,3 +80,5 @@ pub fn read_config(rc_path: &str) -> Configuration {
 }
 
 pub static SOCKET_PATH: &'static str = "smtp-daemon-socket";
+pub static OK_SIGNAL: &'static str = "OK";
+pub static ERROR_SIGNAL: &'static str = "ERROR";
