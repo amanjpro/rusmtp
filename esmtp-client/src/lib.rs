@@ -35,56 +35,56 @@ impl SMTPConnection {
         let mut stream = connector.connect(host, stream)
             .expect(&format!("Cannot establish TLS connection to {}", host));
 
-        let responce = SMTPConnection::recieve(&mut stream);
+        let response = SMTPConnection::recieve(&mut stream);
 
-        SMTPConnection::log(&responce);
+        SMTPConnection::log(&response);
 
         SMTPConnection::true_or_panic(
-            responce.starts_with("220") && responce.contains("ESMTP"),
+            response.starts_with("220") && response.contains("ESMTP"),
             &format!("SMTP Server {} is not accepting clients", host));
 
-        let responce = SMTPConnection::send_and_check(&mut stream,
+        let response = SMTPConnection::send_and_check(&mut stream,
             &format!("{} smtp.amanj.me\n", EHLO).as_bytes(),
-            &|responce| responce.starts_with("250"),
+            &|response| response.starts_with("250"),
             &format!("SMTP Server {} does not support ESMTP", host));
 
-        if responce.contains(STARTTLS) {
+        if response.contains(STARTTLS) {
             SMTPConnection::send_and_check(&mut stream,
                 &format!("{} smtp.amanj.me\n", STARTTLS).as_bytes(),
-                &|responce| responce.starts_with("250"),
+                &|response| response.starts_with("250"),
                 &format!("Cannot start a TLS connection"));
 
             SMTPConnection::send_and_check(&mut stream,
                 &format!("{} smtp.amanj.me\n", EHLO).as_bytes(),
-                &|responce| responce.starts_with("250"),
+                &|response| response.starts_with("250"),
                 &format!("SMTP Server {} does not support ESMTP", host));
         }
 
 
         SMTPConnection {
             stream: stream,
-            supports_login: responce.contains(LOGIN),
-            supports_xoauth2: responce.contains(XOAUTH2),
+            supports_login: response.contains(LOGIN),
+            supports_xoauth2: response.contains(XOAUTH2),
         }
     }
 
     pub fn login(&mut self, username: &SecStr, passwd: &SecStr) {
        SMTPConnection::send(&mut self.stream, format!("{} {}\n", AUTH, LOGIN).as_bytes());
-       let responce = SMTPConnection::recieve(&mut self.stream);
-       SMTPConnection::log(&responce);
+       let response = SMTPConnection::recieve(&mut self.stream);
+       SMTPConnection::log(&response);
        SMTPConnection::send(&mut self.stream, &encode(&username.unsecure()).as_bytes());
        SMTPConnection::send(&mut self.stream, b"\n");
-       let responce = SMTPConnection::recieve(&mut self.stream);
-       SMTPConnection::log(&responce);
+       let response = SMTPConnection::recieve(&mut self.stream);
+       SMTPConnection::log(&response);
        SMTPConnection::send(&mut self.stream, &encode(&passwd.unsecure()).as_bytes());
        SMTPConnection::send_and_check(&mut self.stream, b"\n",
-           &|responce| responce.starts_with("235"),
+           &|response| response.starts_with("235"),
            "Invalid username or password");
     }
 
     pub fn keep_alive(&mut self) {
         SMTPConnection::send_and_check(&mut self.stream, &format!("{}\n", NOOP).as_bytes(),
-           &|responce| responce.starts_with("250"),
+           &|response| response.starts_with("250"),
            "Connection is with the server is lost");
     }
 
@@ -92,23 +92,23 @@ impl SMTPConnection {
     pub fn send_mail(&mut self, from: &str, recipients: &[&str], body: &[u8]) {
        SMTPConnection::send_and_check(&mut self.stream,
           format!("{} {}:<{}>\r\n", MAIL, FROM, from).as_bytes(),
-           &|responce| responce.starts_with("250"),
+           &|response| response.starts_with("250"),
            &format!("Cannot send email from {}", from));
 
        for recipient in recipients.iter() {
           SMTPConnection::send_and_check(&mut self.stream,
               format!("{} {}:<{}>\r\n", RCPT, TO, recipient).as_bytes(),
-              &|responce| responce.starts_with("250"),
+              &|response| response.starts_with("250"),
               &format!("Cannot send email to {}", recipient));
        }
 
        SMTPConnection::send_and_check(&mut self.stream, format!("{}\r\n", DATA).as_bytes(),
-              &|responce| responce.starts_with("354"),
+              &|response| response.starts_with("354"),
               &format!("Cannot start sending email"));
 
        SMTPConnection::send(&mut self.stream, body);
        SMTPConnection::send_and_check(&mut self.stream, b"\r\n.\r\n",
-           &|responce| responce.starts_with("250"),
+           &|response| response.starts_with("250"),
            "Failed to send email");
     }
 
@@ -116,12 +116,12 @@ impl SMTPConnection {
                       check: &Fn(&str) -> bool,
                       on_failure_msg: &str) -> String {
        SMTPConnection::send(&mut stream, msg);
-       let responce = SMTPConnection::recieve(&mut stream);
-       SMTPConnection::log(&responce);
+       let response = SMTPConnection::recieve(&mut stream);
+       SMTPConnection::log(&response);
        SMTPConnection::true_or_panic(
-           check(&responce),
+           check(&response),
            on_failure_msg);
-       responce
+       response
     }
 
     fn log(msg: &str) {
@@ -144,9 +144,9 @@ impl SMTPConnection {
 
 
     fn recieve(stream: &mut TlsStream<TcpStream>) -> String {
-        let mut responce = [0; 4096];
-        let _ = stream.read(&mut responce);
-        std::str::from_utf8(&responce).expect("Cannot decode the message").to_string()
+        let mut response = [0; 4096];
+        let _ = stream.read(&mut response);
+        std::str::from_utf8(&response).expect("Cannot decode the message").to_string()
     }
 
     fn send(stream: &mut TlsStream<TcpStream>, msg: &[u8]) {
