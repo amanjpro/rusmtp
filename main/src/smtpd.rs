@@ -123,7 +123,7 @@ fn default_smtp_client(conf: Configuration, passwd: &mut SecStr) {
 }
 
 fn start_daemon(conf: Configuration) {
-    let eval = &conf.passwordeval;
+    let eval = &conf.passwordeval.clone();
     let client = conf.smtpclient.clone();
 
     if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
@@ -138,11 +138,10 @@ fn start_daemon(conf: Configuration) {
         fs::remove_file(SOCKET_PATH);
 
         match client {
-
             Some(client) =>
                 external_smtp_client(&client, &passwd),
             None         =>
-                default_smtp_client(conf.to_owned(), &mut passwd),
+                default_smtp_client(conf, &mut passwd),
         }
     }
 }

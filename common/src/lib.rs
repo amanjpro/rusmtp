@@ -13,7 +13,6 @@ pub struct Mail {
 
 const DEFAULT_HEARTBEAT_IN_MINUTES: u8 = 3;
 
-#[derive(Clone)]
 pub struct Configuration {
     pub passwordeval: String,
     pub smtpclient: Option<String>,
