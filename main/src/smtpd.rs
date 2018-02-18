@@ -55,6 +55,24 @@ fn send_mail(mut stream: UnixStream, client: &str, passwd: &SecStr) {
     }
 }
 
+fn external_smtp_client(client: &str, passwd: &SecStr) {
+    if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+        for stream in listener.incoming() {
+            match stream {
+                Ok(mut stream) => {
+                  send_mail(stream, &client, &passwd);
+                }
+                Err(err) => {
+                    /* connection failed */
+                    break;
+                }
+            }
+        }
+    } else {
+        panic!("failed to open a socket")
+    }
+}
+
 fn start_daemon(conf: Configuration) {
     let eval = &conf.passwordeval;
     let client = conf.smtpclient;
@@ -73,22 +91,7 @@ fn start_daemon(conf: Configuration) {
         match client {
 
             Some(client) =>
-                if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
-
-                    for stream in listener.incoming() {
-                        match stream {
-                            Ok(mut stream) => {
-                              send_mail(stream, &client, &passwd);
-                            }
-                            Err(err) => {
-                                /* connection failed */
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    panic!("failed to open a socket")
-                },
+                external_smtp_client(&client, &passwd),
             None         => {
                 let host     = conf.host.expect("Please configure the SMTP host");
                 let username = conf.username.expect("Please configure the username");
