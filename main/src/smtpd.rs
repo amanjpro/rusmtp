@@ -34,7 +34,7 @@ struct Args {
     flag_version: bool,
 }
 
-fn send_mail(mut stream: UnixStream, client: &str, passwd: &SecStr) {
+fn send_mail_with_external_client(mut stream: UnixStream, client: &str, passwd: &SecStr) {
     let mut mail = String::new();
     stream.read_to_string(&mut mail).unwrap();
     let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
@@ -60,7 +60,7 @@ fn external_smtp_client(client: &str, passwd: &SecStr) {
         for stream in listener.incoming() {
             match stream {
                 Ok(mut stream) => {
-                  send_mail(stream, &client, &passwd);
+                  send_mail_with_external_client(stream, &client, &passwd);
                 }
                 Err(err) => {
                     /* connection failed */
