@@ -4,7 +4,7 @@ extern crate secstr;
 extern crate esmtp_client;
 
 use secstr::SecStr;
-use common::{SOCKET_PATH, OK_SIGNAL, ERROR_SIGNAL, Mail, Configuration, process_args};
+use common::*;
 use esmtp_client::SMTPConnection;
 
 use std::os::unix::net::{UnixStream, UnixListener};
@@ -140,7 +140,8 @@ fn start_daemon(conf: Configuration) {
 
 fn main() {
 
-    let conf = process_args("smtpd");
+    let args = process_args("smtpd", &smtpd_usage("smptd"));
+    let conf = read_config(&args.flag_smtpdrc);
 
     start_daemon(conf);
 }

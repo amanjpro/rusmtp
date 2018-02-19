@@ -6,25 +6,22 @@ use std::os::unix::net::UnixStream;
 use std::process::exit;
 use std::net::Shutdown;
 use std::time::Duration;
-use common::{SOCKET_PATH, ERROR_SIGNAL, OK_SIGNAL, Mail, process_args};
+use common::*;
 use std::env;
 use std::io::{self, Read, Write};
 
 fn main () {
 
-    let conf = process_args("smtpc");
+    let args = process_args("smtpc", &smtpc_usage("smptc"));
+    let conf = read_config(&args.flag_smtpdrc);
 
-    let mut full_args: Vec<String> = env::args().collect();
-
-    full_args.remove(0);
 
     let mut body: Vec<u8> = Vec::new();
     io::stdin().read_to_end(&mut body).expect("Reading mail from the stdin");
 
     let mail = Mail {
-        recipients: full_args,
+        recipients: args.arg_recipients,
         body: body,
-
     };
 
     let msg =serde_json::to_string(&mail)
@@ -33,7 +30,7 @@ fn main () {
     let mut stream = UnixStream::connect(SOCKET_PATH).expect("The daemon is not running, please start it.");
     stream.write_all(msg.as_bytes()).unwrap();
     stream.shutdown(Shutdown::Write);
-    let timeout = Duration::new(30, 0);
+    let timeout = Duration::new(conf.timeout, 0);
     let _ = stream.set_read_timeout(Some(timeout));
     let mut response = Vec::new();
     let _ = stream.read_to_end(&mut response).expect("Timeout is met, please retry");
