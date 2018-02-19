@@ -27,13 +27,15 @@ fn main () {
         .expect("Cannot generate JSON for the given message");
 
     let mut stream = UnixStream::connect(SOCKET_PATH).expect("The daemon is not running, please start it.");
-    let timeout = Duration::new(5, 0);
-    let _ = stream.set_read_timeout(Some(timeout));
     stream.write_all(msg.as_bytes()).unwrap();
-    let mut response = String::new();
-    let _ = stream.read_to_string(&mut response);
-    if &response == ERROR_SIGNAL { exit(1); }
-    else if &response == OK_SIGNAL { exit(0); }
+    stream.shutdown(std::net::Shutdown::Write);
+    let timeout = Duration::new(30, 0);
+    let _ = stream.set_read_timeout(Some(timeout));
+    let mut response = Vec::new();
+    let _ = stream.read_to_end(&mut response).expect("Timeout is met, please retry");
+    let response = String::from_utf8(response).expect("Cannot decode the response");
+    if ERROR_SIGNAL == response { exit(1); }
+    else if OK_SIGNAL == response { exit(0); }
     else {
         println!("Unexpected response from the server: {}", response);
         exit(1);
