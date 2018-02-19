@@ -1,11 +1,7 @@
-extern crate serde;
 extern crate serde_json;
 extern crate common;
 extern crate secstr;
 extern crate esmtp_client;
-
-#[macro_use]
-extern crate serde_derive;
 
 use secstr::SecStr;
 use common::{SOCKET_PATH, OK_SIGNAL, ERROR_SIGNAL, Mail, Configuration, process_args};
