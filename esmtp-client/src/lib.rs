@@ -6,7 +6,7 @@ extern crate base64;
 
 use verbs::*;
 use secstr::SecStr;
-use base64::{encode, decode};
+use base64::encode;
 use std::io::prelude::*;
 use native_tls::{TlsConnector, TlsStream};
 use std::net::{TcpStream, ToSocketAddrs, IpAddr};

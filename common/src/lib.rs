@@ -143,14 +143,14 @@ pub fn smtpc_usage(app_name: &str) -> String {
 
 pub fn process_args(app_name: &str, usage: &str) -> Args {
 
-    let APP_VERSION = env!("CARGO_PKG_VERSION");
+    let app_version = env!("CARGO_PKG_VERSION");
 
     let args: Args = Docopt::new(usage.clone())
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
 
     if args.flag_version {
-        println!("{}, v {}", app_name, APP_VERSION);
+        println!("{}, v {}", app_name, app_version);
         exit(0);
     }
 

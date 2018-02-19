@@ -21,7 +21,7 @@ use std::ops::Deref;
 
 fn send_mail_with_external_client(mut stream: UnixStream, client: &str, passwd: &SecStr) {
     let mut mail = String::new();
-    stream.read_to_string(&mut mail).unwrap();
+    let _ = stream.read_to_string(&mut mail).unwrap();
     let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
     let recipients: Vec<String> = mail.recipients;
     let body = mail.body;
@@ -36,11 +36,11 @@ fn send_mail_with_external_client(mut stream: UnixStream, client: &str, passwd: 
 
     match smtp.stdin.unwrap().write_all(body.as_slice()) {
         Err(why) => {
-            stream.write_all(ERROR_SIGNAL.as_bytes());
+            let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
             panic!("couldn't write to smtp stdin: {}", why.description());
         },
         Ok(_) => {
-            stream.write_all(OK_SIGNAL.as_bytes());
+            let _ = stream.write_all(OK_SIGNAL.as_bytes());
             println!("email sent to smtp");
         },
     }
@@ -53,7 +53,7 @@ fn external_smtp_client(client: &str, passwd: &SecStr) {
                 Ok(mut stream) => {
                   send_mail_with_external_client(stream, &client, &passwd);
                 }
-                Err(err) => {
+                _              => {
                     /* connection failed */
                     break;
                 }
@@ -101,9 +101,9 @@ fn default_smtp_client(conf: Configuration, passwd: &mut SecStr) {
                     let body = mail.body;
                     mailer.lock().expect("Cannot get the mailer instance to send an email")
                         .send_mail(&username, &recipients, &body);
-                    stream.write_all(OK_SIGNAL.as_bytes());
+                    let _ = stream.write_all(OK_SIGNAL.as_bytes());
                 }
-                Err(err) => {
+                _          => {
                     /* connection failed */
                     break;
                 }
@@ -121,13 +121,13 @@ fn start_daemon(conf: Configuration) {
     if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
         let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
         let mut output = String::new();
-        child_stdout.read_to_string(&mut output);
+        let _ = child_stdout.read_to_string(&mut output);
 
         let mut passwd = SecStr::from(output.trim());
         output.clear();
 
         // close the socket, if it exists
-        fs::remove_file(SOCKET_PATH);
+        let _ = fs::remove_file(SOCKET_PATH);
 
         match client {
             Some(client) =>

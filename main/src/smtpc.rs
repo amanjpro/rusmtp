@@ -7,7 +7,6 @@ use std::process::exit;
 use std::net::Shutdown;
 use std::time::Duration;
 use common::*;
-use std::env;
 use std::io::{self, Read, Write};
 
 fn main () {
@@ -28,8 +27,8 @@ fn main () {
         .expect("Cannot generate JSON for the given message");
 
     let mut stream = UnixStream::connect(SOCKET_PATH).expect("The daemon is not running, please start it.");
-    stream.write_all(msg.as_bytes()).unwrap();
-    stream.shutdown(Shutdown::Write);
+    let _ = stream.write_all(msg.as_bytes()).unwrap();
+    let _ = stream.shutdown(Shutdown::Write);
     let timeout = Duration::new(conf.timeout, 0);
     let _ = stream.set_read_timeout(Some(timeout));
     let mut response = Vec::new();
