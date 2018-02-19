@@ -1,7 +1,6 @@
 extern crate serde;
 extern crate serde_json;
 extern crate common;
-extern crate docopt;
 extern crate secstr;
 extern crate esmtp_client;
 
@@ -9,13 +8,12 @@ extern crate esmtp_client;
 extern crate serde_derive;
 
 use secstr::SecStr;
-use common::{SOCKET_PATH, OK_SIGNAL, ERROR_SIGNAL, Mail, Configuration, read_config};
+use common::{SOCKET_PATH, OK_SIGNAL, ERROR_SIGNAL, Mail, Configuration, process_args};
 use esmtp_client::SMTPConnection;
 
 use std::os::unix::net::{UnixStream, UnixListener};
-use std::process::{exit, Command, Stdio};
+use std::process::{Command, Stdio};
 use std::io::{Read, Write};
-use std::env::home_dir;
 use std::error::Error;
 use std::{str,fs};
 use std::thread;
@@ -23,16 +21,7 @@ use std::time::Duration;
 use std::sync::{Mutex, Arc};
 use std::ops::Deref;
 
-use docopt::Docopt;
 
-
-// Define the struct that results from those options.
-#[derive(Deserialize, Debug)]
-struct Args {
-    flag_smtpdrc: String,
-    flag_help: bool,
-    flag_version: bool,
-}
 
 fn send_mail_with_external_client(mut stream: UnixStream, client: &str, passwd: &SecStr) {
     let mut mail = String::new();
@@ -155,41 +144,7 @@ fn start_daemon(conf: Configuration) {
 
 fn main() {
 
-    let home_dir = home_dir().expect("Cannot find the home directory");
-    let home_dir = home_dir.display();
-
-    let APP_VERSION = env!("CARGO_PKG_VERSION");
-    let APP_NAME = "smtpd";
-    // Define a USAGE string.
-    let USAGE = format!("
-    {}
-
-    Usage: {0}
-           {0} --smtpdrc=<string>
-           {0} --help
-           {0} --version
-
-    Options:
-        --smtpdrc=<string>       Path to the smtpdrc [default: {}/.smtpdrc]
-        -h, --help               Show this help.
-        -v, --version            Show the version.
-    ", APP_NAME, home_dir);
-
-    let args: Args = Docopt::new(USAGE.clone())
-        .and_then(|d| d.deserialize())
-        .unwrap_or_else(|e| e.exit());
-
-    if args.flag_version {
-        println!("{}, v {}", APP_NAME, APP_VERSION);
-        exit(0);
-    }
-
-    if args.flag_help {
-        println!("{}", USAGE);
-        exit(0);
-    }
-
-    let conf = read_config(&args.flag_smtpdrc);
+    let conf = process_args("smtpd");
 
     start_daemon(conf);
 }

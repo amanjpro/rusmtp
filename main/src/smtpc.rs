@@ -6,12 +6,16 @@ extern crate common;
 use std::os::unix::net::UnixStream;
 use std::process::exit;
 use std::time::Duration;
-use common::{SOCKET_PATH, ERROR_SIGNAL, OK_SIGNAL, Mail};
+use common::{SOCKET_PATH, ERROR_SIGNAL, OK_SIGNAL, Mail, process_args};
 use std::env;
 use std::io::{self, Read, Write};
 
 fn main () {
+
+    let conf = process_args("smtpc");
+
     let mut full_args: Vec<String> = env::args().collect();
+
     full_args.remove(0);
 
     let mut body: Vec<u8> = Vec::new();

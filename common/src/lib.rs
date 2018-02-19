@@ -1,9 +1,22 @@
 extern crate ini;
+extern crate docopt;
 
 #[macro_use]
 extern crate serde_derive;
 
 use ini::Ini;
+use docopt::Docopt;
+use std::env::home_dir;
+use std::process::exit;
+
+// Define the struct that results from those options.
+#[derive(Deserialize, Debug)]
+struct Args {
+    flag_smtpdrc: String,
+    flag_help: bool,
+    flag_version: bool,
+}
+
 
 #[derive(Deserialize, Serialize)]
 pub struct Mail {
@@ -23,7 +36,7 @@ pub struct Configuration {
     pub heartbeat: u8,
 }
 
-pub fn read_config(rc_path: &str) -> Configuration {
+fn read_config(rc_path: &str) -> Configuration {
     let conf = Ini::load_from_file(rc_path).unwrap();
 
     let section = conf.section(Some("Daemon".to_owned()))
@@ -77,6 +90,43 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 heartbeat: DEFAULT_HEARTBEAT_IN_MINUTES,
             },
     }
+}
+
+pub fn process_args(app_name: &str) -> Configuration {
+    let home_dir = home_dir().expect("Cannot find the home directory");
+    let home_dir = home_dir.display();
+
+    let APP_VERSION = env!("CARGO_PKG_VERSION");
+    // Define a USAGE string.
+    let USAGE = format!("
+    {}
+
+    Usage: {0}
+           {0} --smtpdrc=<string>
+           {0} --help
+           {0} --version
+
+    Options:
+        --smtpdrc=<string>       Path to the smtpdrc [default: {}/.smtpdrc]
+        -h, --help               Show this help.
+        -v, --version            Show the version.
+    ", app_name, home_dir);
+
+    let args: Args = Docopt::new(USAGE.clone())
+        .and_then(|d| d.deserialize())
+        .unwrap_or_else(|e| e.exit());
+
+    if args.flag_version {
+        println!("{}, v {}", app_name, APP_VERSION);
+        exit(0);
+    }
+
+    if args.flag_help {
+        println!("{}", USAGE);
+        exit(0);
+    }
+
+    read_config(&args.flag_smtpdrc)
 }
 
 pub static SOCKET_PATH: &'static str = "smtp-daemon-socket";
