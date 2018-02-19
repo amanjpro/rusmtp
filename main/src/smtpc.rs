@@ -5,6 +5,7 @@ extern crate common;
 
 use std::os::unix::net::UnixStream;
 use std::process::exit;
+use std::net::Shutdown;
 use std::time::Duration;
 use common::{SOCKET_PATH, ERROR_SIGNAL, OK_SIGNAL, Mail, process_args};
 use std::env;
@@ -32,7 +33,7 @@ fn main () {
 
     let mut stream = UnixStream::connect(SOCKET_PATH).expect("The daemon is not running, please start it.");
     stream.write_all(msg.as_bytes()).unwrap();
-    stream.shutdown(std::net::Shutdown::Write);
+    stream.shutdown(Shutdown::Write);
     let timeout = Duration::new(30, 0);
     let _ = stream.set_read_timeout(Some(timeout));
     let mut response = Vec::new();
