@@ -50,7 +50,7 @@ fn external_smtp_client(client: &str, passwd: &SecStr) {
     if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
         for stream in listener.incoming() {
             match stream {
-                Ok(mut stream) => {
+                Ok(stream) => {
                   send_mail_with_external_client(stream, &client, &passwd);
                 }
                 _              => {
@@ -75,7 +75,7 @@ fn default_smtp_client(conf: Configuration, passwd: &mut SecStr) {
         mailer.login(&SecStr::from(username.clone()), &passwd);
     }
 
-    let mut mailer = Arc::new(Mutex::new(mailer));
+    let mailer = Arc::new(Mutex::new(mailer));
 
     {
         let mailer = mailer.clone();
