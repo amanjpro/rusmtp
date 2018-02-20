@@ -3,6 +3,9 @@ passwordeval=echo password
 # custom smtp clients
 # smtp=/path/to/custom/smtp/client
 
+[Client]
+timeout=30
+
 [SMTP]
 host=smtp.gmail.com
 username=username@gmail.com
