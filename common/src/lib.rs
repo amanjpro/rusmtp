@@ -14,6 +14,7 @@ use std::process::exit;
 #[derive(Deserialize, Debug)]
 pub struct Args {
     pub arg_recipients: Vec<String>,
+    pub arg_account: Option<String>,
     pub flag_smtpdrc: String,
     flag_help: bool,
     flag_version: bool,
@@ -22,6 +23,7 @@ pub struct Args {
 
 #[derive(Deserialize, Serialize)]
 pub struct Mail {
+    pub account: Option<String>,
     pub recipients: Vec<String>,
     pub body: Vec<u8>,
 }
@@ -148,11 +150,14 @@ pub fn smtpc_usage(app_name: &str) -> String {
     format!("
         {}
 
-        Usage: {0} [--smtpdrc=<string>] [--] <recipients>...
+        Usage: {0} [--account=<string> | --smtpdrc=<string>] [--] <recipients>...
                {0} --help
                {0} --version
 
         Options:
+            --account=<string>       The account on which the email should be sent.
+                                     If none is provided, the default account would
+                                     be chosen.
             --smtpdrc=<string>       Path to the smtpdrc [default: {}/.smtpdrc]
             -h, --help               Show this help.
             -v, --version            Show the version.
