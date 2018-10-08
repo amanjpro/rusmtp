@@ -47,7 +47,7 @@ fn send_mail_with_external_client(mut stream: UnixStream, client: &str, passwd: 
 }
 
 fn external_smtp_client(client: &str, label: &str, passwd: &SecStr) {
-    if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+    if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
@@ -95,7 +95,7 @@ fn default_smtp_client(account: Account, passwd: &mut SecStr) {
         });
     }
     passwd.zero_out();
-    if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+    if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
 
         for stream in listener.incoming() {
             match stream {
@@ -134,7 +134,7 @@ fn start_daemon(conf: Configuration) {
             output.clear();
 
             // close the socket, if it exists
-            let _ = fs::remove_file(SOCKET_PATH);
+            let _ = fs::remove_file(get_socket_path(&account.label));
 
             match client {
                 Some(client) =>

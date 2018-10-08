@@ -27,7 +27,10 @@ fn main () {
     let msg =serde_json::to_string(&mail)
         .expect("Cannot generate JSON for the given message");
 
-    let mut stream = UnixStream::connect(SOCKET_PATH).expect("The daemon is not running, please start it.");
+    let account = &mail.account
+        .expect("Please pass a valid account name");
+    let mut stream = UnixStream::connect(get_socket_path(account))
+        .expect("The daemon is not running, please start it.");
     let _ = stream.write_all(msg.as_bytes()).unwrap();
     let _ = stream.shutdown(Shutdown::Write);
     let timeout = Duration::new(conf.timeout, 0);

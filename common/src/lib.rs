@@ -185,6 +185,11 @@ pub fn process_args(app_name: &str, usage: &str) -> Args {
     args
 }
 
-pub static SOCKET_PATH: &'static str = "smtp-daemon-socket";
+
+pub fn get_socket_path(account: &str) -> String {
+  format!("{}-{}", SOCKET_PATH_PREFIX, account)
+}
+
+static SOCKET_PATH_PREFIX: &'static str = "smtp-daemon-socket";
 pub static OK_SIGNAL: &'static str = "OK";
 pub static ERROR_SIGNAL: &'static str = "ERROR";
