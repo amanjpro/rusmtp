@@ -150,7 +150,7 @@ pub fn smtpc_usage(app_name: &str) -> String {
     format!("
         {}
 
-        Usage: {0} [--account=<string> | --smtpdrc=<string>] [--] <recipients>...
+        Usage: {0} [--smtpdrc=<string>] [--account=<string>] [--] <recipients>...
                {0} --help
                {0} --version
 
