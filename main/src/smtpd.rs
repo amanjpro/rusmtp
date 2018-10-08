@@ -46,7 +46,7 @@ fn send_mail_with_external_client(mut stream: UnixStream, client: &str, passwd: 
     }
 }
 
-fn external_smtp_client(client: &str, passwd: &SecStr) {
+fn external_smtp_client(client: &str, label: &str, passwd: &SecStr) {
     if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
         for stream in listener.incoming() {
             match stream {
@@ -138,7 +138,7 @@ fn start_daemon(conf: Configuration) {
 
             match client {
                 Some(client) =>
-                    external_smtp_client(&client, &passwd),
+                    external_smtp_client(&client, &account.label, &passwd),
                 None         =>
                     default_smtp_client(account, &mut passwd),
             }
