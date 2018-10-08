@@ -1,12 +1,13 @@
 extern crate ini;
 extern crate docopt;
+extern crate dirs;
 
 #[macro_use]
 extern crate serde_derive;
 
 use ini::Ini;
 use docopt::Docopt;
-use std::env::home_dir;
+use dirs::home_dir;
 use std::process::exit;
 
 // Define the struct that results from those options.
