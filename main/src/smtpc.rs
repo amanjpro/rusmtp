@@ -21,7 +21,7 @@ fn main () {
     let mail = Mail {
         recipients: args.arg_recipients,
         body: body,
-        account: args.arg_account,
+        account: args.flag_account,
     };
 
     let msg =serde_json::to_string(&mail)

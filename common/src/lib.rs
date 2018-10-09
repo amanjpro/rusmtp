@@ -14,7 +14,7 @@ use std::process::exit;
 #[derive(Deserialize, Debug)]
 pub struct Args {
     pub arg_recipients: Vec<String>,
-    pub arg_account: Option<String>,
+    pub flag_account: Option<String>,
     pub flag_smtpdrc: String,
     flag_help: bool,
     flag_version: bool,
