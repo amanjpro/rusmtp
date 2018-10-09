@@ -85,7 +85,7 @@ impl SMTPConnection {
     pub fn keep_alive(&mut self) {
         SMTPConnection::send_and_check(&mut self.stream, &format!("{}\n", NOOP).as_bytes(),
            &|response| response.starts_with("250"),
-           "Connection is with the server is lost");
+           "Connection with the server is lost");
     }
 
 
