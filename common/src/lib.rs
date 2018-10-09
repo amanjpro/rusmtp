@@ -119,6 +119,16 @@ pub fn read_config(rc_path: &str) -> Configuration {
         panic!("At least an account should be configured");
     }
 
+    let default_accounts = accounts.iter()
+        .filter(|acc| acc.default)
+        .collect::<Vec<_>>()
+        .len();
+
+    if default_accounts > 1 {
+        panic!("At most one account can be set to default");
+    }
+
+
     Configuration {
         smtpclient: smtp,
         timeout: timeout,

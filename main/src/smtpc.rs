@@ -27,8 +27,17 @@ fn main () {
     let msg =serde_json::to_string(&mail)
         .expect("Cannot generate JSON for the given message");
 
-    let account = &mail.account
-        .expect("Please pass a valid account name");
+
+    let account = &mail.account.unwrap_or({
+      let &value = conf.accounts.iter()
+        .filter(|acc| acc.default)
+        .map(|x| &x.label)
+        .collect::<Vec<_>>()
+        .first()
+        .expect("Please pass a valid account name or set a default account");
+      value.to_string()
+    });
+
     let mut stream = UnixStream::connect(get_socket_path(account))
         .expect("The daemon is not running, please start it.");
     let _ = stream.write_all(msg.as_bytes()).unwrap();
