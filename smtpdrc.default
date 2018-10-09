@@ -1,14 +1,31 @@
-[Daemon]
-passwordeval=echo password
-# custom smtp clients
-# smtp=/path/to/custom/smtp/client
+; This section contains the configurations for the daemon
+; [Daemon]
+; custom smtp clients
+; smtp=/path/to/custom/smtp/client
 
+; This section contains the configurations for the client
 [Client]
+; Tell the client how long should it wait before before it
+; decides that the email transaction has failed and exit with 1.
 timeout=30
 
-[SMTP]
+; the section label can be anything, but it should match with what
+; the client will be called with
+[account1]
+; The host of the SMTP server
 host=smtp.gmail.com
+; The username of this account
 username=username@gmail.com
+; Tell the daemon how to get the password of this account
+passwordeval=echo password
+; The port of this connection
 port=465
+; If TLS should be used
 tls=true
+; How often the built-in SMTP-protocol should send a heartbeat to
+; the server to maintain the connection
 heartbeat=3
+; Is this account the default account? If so, you can skip passing
+; the account to the SMTP client, which picks this one
+; false or true, case sensitive
+default=false

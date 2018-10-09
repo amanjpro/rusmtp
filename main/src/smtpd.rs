@@ -46,8 +46,8 @@ fn send_mail_with_external_client(mut stream: UnixStream, client: &str, passwd: 
     }
 }
 
-fn external_smtp_client(client: &str, passwd: &SecStr) {
-    if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+fn external_smtp_client(client: &str, label: &str, passwd: &SecStr) {
+    if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
@@ -64,10 +64,16 @@ fn external_smtp_client(client: &str, passwd: &SecStr) {
     }
 }
 
-fn default_smtp_client(conf: Configuration, passwd: &mut SecStr) {
-    let host     = conf.host.expect("Please configure the SMTP host");
-    let username = conf.username.expect("Please configure the username");
-    let port     = conf.port.expect("Please configure the port");
+fn default_smtp_client(account: Account, passwd: &mut SecStr) {
+    let label    = account.label;
+
+    let host     = account.host
+        .expect(&format!("Please configure the host for {}", label));
+
+    let username = account.username
+        .expect(&format!("Please configure the username for {}", label));
+    let port     = account.port
+        .expect(&format!("Please configure the port for {}", label));
 
     let mut mailer = SMTPConnection::open_connection(&host, port);
 
@@ -79,7 +85,7 @@ fn default_smtp_client(conf: Configuration, passwd: &mut SecStr) {
 
     {
         let mailer = mailer.clone();
-        let heartbeat = conf.heartbeat as u64;
+        let heartbeat = account.heartbeat as u64;
         thread::spawn(move || {
             let sleep_time = Duration::from_secs(heartbeat * 60);
             loop {
@@ -89,7 +95,7 @@ fn default_smtp_client(conf: Configuration, passwd: &mut SecStr) {
         });
     }
     passwd.zero_out();
-    if let Ok(listener) = UnixListener::bind(SOCKET_PATH) {
+    if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
 
         for stream in listener.incoming() {
             match stream {
@@ -115,26 +121,36 @@ fn default_smtp_client(conf: Configuration, passwd: &mut SecStr) {
 }
 
 fn start_daemon(conf: Configuration) {
-    let eval = &conf.passwordeval.clone();
-    let client = conf.smtpclient.clone();
+    let mut children = vec![];
+    for account in conf.accounts {
+        let client = conf.smtpclient.clone();
+        children.push(thread::spawn(move || {
+            let eval = account.passwordeval.clone();
 
-    if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
-        let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
-        let mut output = String::new();
-        let _ = child_stdout.read_to_string(&mut output);
+            if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
+                let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
+                let mut output = String::new();
+                let _ = child_stdout.read_to_string(&mut output);
 
-        let mut passwd = SecStr::from(output.trim());
-        output.clear();
+                let mut passwd = SecStr::from(output.trim());
+                output.clear();
 
-        // close the socket, if it exists
-        let _ = fs::remove_file(SOCKET_PATH);
+                // close the socket, if it exists
+                let _ = fs::remove_file(get_socket_path(&account.label));
 
-        match client {
-            Some(client) =>
-                external_smtp_client(&client, &passwd),
-            None         =>
-                default_smtp_client(conf, &mut passwd),
-        }
+                match client {
+                    Some(client) =>
+                        external_smtp_client(&client, &account.label, &passwd),
+                    None         =>
+                        default_smtp_client(account, &mut passwd),
+                }
+            }
+        }));
+    }
+
+    for child in children {
+        // Wait for the thread to finish. Returns a result.
+        let _ = child.join();
     }
 }
 
