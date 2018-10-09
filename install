@@ -5,3 +5,6 @@ set -o errexit -o nounset -o pipefail
 cp smtpd /usr/local/bin/smtpd
 cp smtpc /usr/local/bin/smtpc
 test -z "$HOME"/.smtpdrc && cp smtpdrc.default "$HOME"/.smtpdrc
+man_path=$(manpath | cut -d':' -f1)
+cp doc/smtpd.1 "$man_path/"
+cp doc/smtpc.1 "$man_path/"
