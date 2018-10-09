@@ -1,0 +1,40 @@
+.TH SMTPD 1
+.SH NAME
+smtpd \- an SMTP-client daemon that maintains connection with the
+SMTP-server for added security.
+
+.SH SYNOPSIS
+.B smtpd
+[\fB\-\-smtpdrc=PATH_TO_SMTPDRC]
+
+.SH DESCRIPTION
+.B smtpd
+A Simple SMTP daemon to facilitate working with encrypted passwords.
+
+SMTP clients by default do not maintain the connection with the server.
+If you don't like to enter your password whenever you send an email,
+or the fact that your email/SMTP client stores passwords in plain text,
+then this is the right tool for you.
+
+This consists of two parts, a server that tries to get the password upon
+starting (maybe decrypting it from gpg?), and a client that sends the
+email to be sent to the server.
+
+By default the daemon uses a builtin SMTP client that maintains the connection
+with the SMTP server, does not keep the unencrypted password in memory. The
+builtin SMTP client uses a secure connection (TLS) whenever available. If you
+are sick with the builtin client or you are fine to keep the password
+unencrypted in the memory, then you can configure the daemon to launch a
+third-party SMTP client without losing any convenience.
+
+At its current state, the builtin SMTP client only supports ESMTP and
+only supports LOGIN (i.e. it uses username and password to authenticate
+the connection).
+
+.SH OPTIONS
+.TP
+.BR \-\-smtpdrc=\fIPATH_TO_SMTPDRC\fR
+An option to specify an alternative configuration file for the daemon. By default the daemon reads from $HOME/.smtpdrc, but this options overrides it. An example configuration file is already installed in $HOME/.smtpdrc.
+
+.SH SEE ALSO
+.B smtpc(1)
