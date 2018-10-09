@@ -121,28 +121,36 @@ fn default_smtp_client(account: Account, passwd: &mut SecStr) {
 }
 
 fn start_daemon(conf: Configuration) {
+    let mut children = vec![];
     for account in conf.accounts {
-        let eval = account.passwordeval.clone();
         let client = conf.smtpclient.clone();
+        children.push(thread::spawn(move || {
+            let eval = account.passwordeval.clone();
 
-        if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
-            let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
-            let mut output = String::new();
-            let _ = child_stdout.read_to_string(&mut output);
+            if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
+                let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
+                let mut output = String::new();
+                let _ = child_stdout.read_to_string(&mut output);
 
-            let mut passwd = SecStr::from(output.trim());
-            output.clear();
+                let mut passwd = SecStr::from(output.trim());
+                output.clear();
 
-            // close the socket, if it exists
-            let _ = fs::remove_file(get_socket_path(&account.label));
+                // close the socket, if it exists
+                let _ = fs::remove_file(get_socket_path(&account.label));
 
-            match client {
-                Some(client) =>
-                    external_smtp_client(&client, &account.label, &passwd),
-                None         =>
-                    default_smtp_client(account, &mut passwd),
+                match client {
+                    Some(client) =>
+                        external_smtp_client(&client, &account.label, &passwd),
+                    None         =>
+                        default_smtp_client(account, &mut passwd),
+                }
             }
-        }
+        }));
+    }
+
+    for child in children {
+        // Wait for the thread to finish. Returns a result.
+        let _ = child.join();
     }
 }
 
