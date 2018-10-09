@@ -12,3 +12,4 @@ pub const TO: &'static str = "TO";
 pub const FROM: &'static str = "FROM";
 pub const LOGIN: &'static str = "LOGIN";
 pub const XOAUTH2: &'static str = "XOAUTH2";
+pub const RSET: &'static str = "RSET";

@@ -83,9 +83,15 @@ impl SMTPConnection {
     }
 
     pub fn keep_alive(&mut self) {
-        SMTPConnection::send_and_check(&mut self.stream, &format!("{}\n", NOOP).as_bytes(),
+        SMTPConnection::send_and_check(&mut self.stream,
+          format!("{} {}:<{}>\r\n", MAIL, FROM, "keep-alive").as_bytes(),
            &|response| response.starts_with("250"),
            "Connection with the server is lost");
+
+        SMTPConnection::send_and_check(&mut self.stream, &format!("{}\n", RSET).as_bytes(),
+           &|response| response.starts_with("250"),
+           "Connection with the server is lost");
+
     }
 
 

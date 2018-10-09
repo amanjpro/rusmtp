@@ -22,8 +22,8 @@ passwordeval=echo password
 port=465
 ; If TLS should be used
 tls=true
-; How often the built-in SMTP-protocol should send a heartbeat to
-; the server to maintain the connection
+; How often (in minutes) the built-in SMTP-protocol should send a
+; heartbeat to the server to maintain the connection
 heartbeat=3
 ; Is this account the default account? If so, you can skip passing
 ; the account to the SMTP client, which picks this one
