@@ -38,6 +38,8 @@ archive() {
   cp install smtp-daemon-"$RELEASE_VERSION"/
   cp COPYING smtp-daemon-"$RELEASE_VERSION"/
   cp README.md smtp-daemon-"$RELEASE_VERSION"/
+  cp doc/smtpd.1 smtp-daemon-"$RELEASE_VERSION"/
+  cp doc/smtpc.1 smtp-daemon-"$RELEASE_VERSION"/
 
   tar -czf smtp-daemon-"$RELEASE_VERSION".tar.gz smtp-daemon-"$RELEASE_VERSION"/*
 }
