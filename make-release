@@ -36,6 +36,7 @@ archive() {
   cp target/release/rusmtpd rusmtp-"$RELEASE_VERSION"/
   cp rusmtprc.default rusmtp-"$RELEASE_VERSION"/
   cp install rusmtp-"$RELEASE_VERSION"/
+  cp uninstall rusmtp-"$RELEASE_VERSION"/
   cp COPYING rusmtp-"$RELEASE_VERSION"/
   cp README.md rusmtp-"$RELEASE_VERSION"/
   cp doc/rusmtpd.1 rusmtp-"$RELEASE_VERSION"/
