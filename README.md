@@ -25,11 +25,11 @@ the connection).
 ## Installation
 
 - Download the latest release
-  [here](https://github.com/amanjpro/smtp-daemon/releases), extract it and run
-  `sudo ./install`, it copies the executables to `/usr/local/bin/{smtpc,smtpd}`
-- Update the `~/.smtpdrc` file to match your preferences, for example
+  [here](https://github.com/amanjpro/rusmtp/releases), extract it and run
+  `sudo ./install`, it copies the executables to `/usr/local/bin/{rusmtpc,rusmtpd}`
+- Update the `~/.rusmtprc` file to match your preferences, for example
   the passwordeval setting can be:
   `passwordeval=gpg --quiet --no-tty --decrypt /path/to/encrypted-password.gpg`
-- Update your email-client configuration to use `/usr/local/bin/smtpc` for
+- Update your email-client configuration to use `/usr/local/bin/rusmtpc` for
   sending emails.
-- Make the `/usr/local/bin/smtpd` daemon to run on startup.
+- Make the `/usr/local/bin/rusmtpd` daemon to run on startup.

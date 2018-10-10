@@ -44,18 +44,18 @@ impl SMTPConnection {
             &format!("SMTP Server {} is not accepting clients", host));
 
         let response = SMTPConnection::send_and_check(&mut stream,
-            &format!("{} smtp.amanj.me\n", EHLO).as_bytes(),
+            &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
             &|response| response.starts_with("250"),
             &format!("SMTP Server {} does not support ESMTP", host));
 
         if response.contains(STARTTLS) {
             SMTPConnection::send_and_check(&mut stream,
-                &format!("{} smtp.amanj.me\n", STARTTLS).as_bytes(),
+                &format!("{} rusmtp.amanj.me\n", STARTTLS).as_bytes(),
                 &|response| response.starts_with("250"),
                 &format!("Cannot start a TLS connection"));
 
             SMTPConnection::send_and_check(&mut stream,
-                &format!("{} smtp.amanj.me\n", EHLO).as_bytes(),
+                &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
                 &|response| response.starts_with("250"),
                 &format!("SMTP Server {} does not support ESMTP", host));
         }

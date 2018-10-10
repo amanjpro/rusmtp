@@ -15,7 +15,7 @@ use std::process::exit;
 pub struct Args {
     pub arg_recipients: Vec<String>,
     pub flag_account: Option<String>,
-    pub flag_smtpdrc: String,
+    pub flag_rusmtprc: String,
     flag_help: bool,
     flag_version: bool,
 }
@@ -136,31 +136,31 @@ pub fn read_config(rc_path: &str) -> Configuration {
     }
 }
 
-pub fn smtpd_usage(app_name: &str) -> String {
+pub fn rusmtpd_usage(app_name: &str) -> String {
     let home_dir = home_dir().expect("Cannot find the home directory");
     let home_dir = home_dir.display();
     format!("
         {}
 
         Usage: {0}
-               {0} --smtpdrc=<string>
+               {0} --rusmtprc=<string>
                {0} --help
                {0} --version
 
         Options:
-            --smtpdrc=<string>       Path to the smtpdrc [default: {}/.smtpdrc]
+            --rusmtprc=<string>      Path to the rusmtprc [default: {}/.rusmtprc]
             -h, --help               Show this help.
             -v, --version            Show the version.
         ", app_name, home_dir)
 }
 
-pub fn smtpc_usage(app_name: &str) -> String {
+pub fn rusmtpc_usage(app_name: &str) -> String {
     let home_dir = home_dir().expect("Cannot find the home directory");
     let home_dir = home_dir.display();
     format!("
         {}
 
-        Usage: {0} [--smtpdrc=<string>] [--account=<string>] [--] <recipients>...
+        Usage: {0} [--rusmtprc=<string>] [--account=<string>] [--] <recipients>...
                {0} --help
                {0} --version
 
@@ -168,7 +168,7 @@ pub fn smtpc_usage(app_name: &str) -> String {
             --account=<string>       The account on which the email should be sent.
                                      If none is provided, the default account would
                                      be chosen.
-            --smtpdrc=<string>       Path to the smtpdrc [default: {}/.smtpdrc]
+            --rusmtprc=<string>      Path to the rusmtprc [default: {}/.rusmtprc]
             -h, --help               Show this help.
             -v, --version            Show the version.
         ", app_name, home_dir)
@@ -200,6 +200,6 @@ pub fn get_socket_path(account: &str) -> String {
   format!("{}-{}", SOCKET_PATH_PREFIX, account)
 }
 
-static SOCKET_PATH_PREFIX: &'static str = "smtp-daemon-socket";
+static SOCKET_PATH_PREFIX: &'static str = "rusmtp-daemon-socket";
 pub static OK_SIGNAL: &'static str = "OK";
 pub static ERROR_SIGNAL: &'static str = "ERROR";
