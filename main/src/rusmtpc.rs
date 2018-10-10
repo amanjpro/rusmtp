@@ -11,8 +11,8 @@ use std::io::{self, Read, Write};
 
 fn main () {
 
-    let args = process_args("smtpc", &smtpc_usage("smptc"));
-    let conf = read_config(&args.flag_smtpdrc);
+    let args = process_args("rusmtpc", &rusmtpc_usage("rusmtpc"));
+    let conf = read_config(&args.flag_rusmtprc);
 
 
     let mut body: Vec<u8> = Vec::new();

@@ -32,14 +32,14 @@ build() {
 archive() {
   rm -rf smtp-daemon-"$RELEASE_VERSION"
   mkdir smtp-daemon-"$RELEASE_VERSION"
-  cp target/release/smtpc smtp-daemon-"$RELEASE_VERSION"/
-  cp target/release/smtpd smtp-daemon-"$RELEASE_VERSION"/
-  cp smtpdrc.default smtp-daemon-"$RELEASE_VERSION"/
+  cp target/release/rusmtpc smtp-daemon-"$RELEASE_VERSION"/
+  cp target/release/rusmtpd smtp-daemon-"$RELEASE_VERSION"/
+  cp rusmtprc.default smtp-daemon-"$RELEASE_VERSION"/
   cp install smtp-daemon-"$RELEASE_VERSION"/
   cp COPYING smtp-daemon-"$RELEASE_VERSION"/
   cp README.md smtp-daemon-"$RELEASE_VERSION"/
-  cp doc/smtpd.1 smtp-daemon-"$RELEASE_VERSION"/
-  cp doc/smtpc.1 smtp-daemon-"$RELEASE_VERSION"/
+  cp doc/rusmtpd.1 smtp-daemon-"$RELEASE_VERSION"/
+  cp doc/rusmtpc.1 smtp-daemon-"$RELEASE_VERSION"/
 
   tar -czf smtp-daemon-"$RELEASE_VERSION".tar.gz smtp-daemon-"$RELEASE_VERSION"/*
 }

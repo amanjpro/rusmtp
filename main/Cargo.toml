@@ -4,12 +4,12 @@ version = "3.1.0-SNAPSHOT"
 authors = ["amanjpro <http://www.amanj.me>"]
 
 [[bin]]
-name = "smtpd"
-path = "src/smtpd.rs"
+name = "rusmtpd"
+path = "src/rusmtpd.rs"
 
 [[bin]]
-name = "smtpc"
-path = "src/smtpc.rs"
+name = "rusmtpc"
+path = "src/rusmtpc.rs"
 
 [dependencies]
 secstr = "0.3.0"

@@ -1,14 +1,14 @@
-.TH SMTPD 1
+.TH RUSMTPD 1
 .SH NAME
-smtpd \- an SMTP-client daemon that maintains connection with the
+rusmtpd \- an SMTP-client daemon that maintains connection with the
 SMTP-server for added security.
 
 .SH SYNOPSIS
-.B smtpd
-[\fB\-\-smtpdrc=PATH_TO_SMTPDRC]
+.B rusmtpd
+[\fB\-\-rusmtprc=PATH_TO_SMTPDRC]
 
 .SH DESCRIPTION
-.B smtpd
+.B rusmtpd
 A Simple SMTP daemon to facilitate working with encrypted passwords.
 
 SMTP clients by default do not maintain the connection with the server.
@@ -33,8 +33,8 @@ the connection).
 
 .SH OPTIONS
 .TP
-.BR \-\-smtpdrc=\fIPATH_TO_SMTPDRC\fR
-An option to specify an alternative configuration file for the daemon. By default the daemon reads from $HOME/.smtpdrc, but this options overrides it. An example configuration file is already installed in $HOME/.smtpdrc.
+.BR \-\-rusmtprc=\fIPATH_TO_SMTPDRC\fR
+An option to specify an alternative configuration file for the daemon. By default the daemon reads from $HOME/.rusmtprc, but this options overrides it. An example configuration file is already installed in $HOME/.rusmtprc.
 
 .SH SEE ALSO
-.B smtpc(1)
+.B rusmtpc(1)

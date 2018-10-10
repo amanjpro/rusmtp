@@ -156,8 +156,8 @@ fn start_daemon(conf: Configuration) {
 
 fn main() {
 
-    let args = process_args("smtpd", &smtpd_usage("smptd"));
-    let conf = read_config(&args.flag_smtpdrc);
+    let args = process_args("rusmtpd", &rusmtpd_usage("rusmtpd"));
+    let conf = read_config(&args.flag_rusmtprc);
 
     start_daemon(conf);
 }
