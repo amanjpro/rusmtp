@@ -1,6 +1,6 @@
 [package]
 name = "main"
-version = "4.0.2"
+version = "4.1.0-SNAPSHOT"
 authors = ["amanjpro <http://www.amanj.me>"]
 
 [[bin]]
