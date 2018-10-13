@@ -2,7 +2,6 @@ language: rust
 rust:
   - stable
 matrix:
-  allow_failures:
   fast_finish: true
 before_install:
   - bash ci/install.sh
