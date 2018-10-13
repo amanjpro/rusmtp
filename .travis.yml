@@ -1,0 +1,26 @@
+language: rust
+rust:
+  - stable
+matrix:
+  fast_finish: true
+before_install:
+  - bash ci/install.sh
+  - export PKG_CONFIG_ALLOW_CROSS=1
+  - export PATH=/usr/local/osx-ndk-x86/bin:$PATH
+script:
+  - cargo update
+  - cargo build --target=x86_64-apple-darwin --release
+  - cargo build --target=x86_64-unknown-linux-gnu --release
+  - OPENSSL_LIB_DIR=/tmp/openssl-1.0.1t/ OPENSSL_INCLUDE_DIR=/tmp/openssl-1.0.1t/include cargo build --target=armv7-unknown-linux-gnueabihf --release
+    #- cargo build --target=i686-unknown-linux-gnu-gcc --release
+before_deploy:
+  - bash ci/prepare-deploy.sh
+deploy:
+  provider: releases
+  file_glob: true
+  file: archive/*.tar.gz
+  skip_cleanup: true
+  api_key:
+    secure: qwG+ZexDoTEQphncSOWUYkIszjojN/PefwdG+ofaSJ5liPemyZ3tTUpqulJbZdKdeckTaE/VYv7FiXmIvPWLvMh5ZNai6pBb0x5N+fJgES8cSlkoDvd4tFrJ8HJxmk9AWCEtFrQMpbmwclle4N4R3rWg+Hyyc4aJwaPGBMGAOEtC0WKyz6R3l/s+LFeiHEh3Ou16beZcqbN/LA4KffTKezJOI+yaWyyz5PU7kJRXkXq+7MXa+qEzqx0Mg1ZLE6eBxPcUyHOsvqY6OWBBKoAwl7O5e0RZ5wzDh+MIC0IZnCw8iTqTTxqEAVqybJU1FeaRg5+4xtCyuhxZ44TYWKOk0o7n9Uy+IPrf3Do4AVsQUKSwQAh9kgFoiOopgIcfaq4TssOwe3wSuC2hWKon6bcrDjYoE2rCFTlJAtyDyp0UmzYolzKuPUHagbq0UzcWImVN4PrIfgawxhWdx2/Xi9HWfh6RYLUUeLQDTAfY6eRgqamHmq51NHCNAHm96cvcMtCpg1wTmdmtIsDB9SAA/W1kTfSQjq6Nftg0HxMdY4xBbBGx0SBbQBLUu01FDo68j8ubLWAMnpKygKsHOZM4y/C/f87/h0m0QZ8qcwKnqPKz3/QN6EuD5Gabb0c65XkhLnahtpu9HfhFYHU0LzLtsUFahTvpv92zwJd26eCW8NDj+GQ=
+  on:
+    tags: true
