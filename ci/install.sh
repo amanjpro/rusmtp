@@ -30,12 +30,12 @@ rm -rf osxcross
 # Install ARM openssl
 current_directory=$(pwd)
 cd /tmp
-wget https://www.openssl.org/source/openssl-1.0.1t.tar.gz
-tar xzf openssl-1.0.1t.tar.gz
+wget https://www.openssl.org/source/openssl-1.1.1.tar.gz
+tar xzf openssl-1.1.1.tar.gz
 export MACHINE=armv7
 export ARCH=arm
 export CC=arm-linux-gnueabihf-gcc
-cd openssl-1.0.1t && ./config shared && make && cd -
+cd openssl-1.1.1 && ./config shared && make && cd -
 cd "$current_directory"
 
 cat >$HOME/.cargo/config <<EOF
