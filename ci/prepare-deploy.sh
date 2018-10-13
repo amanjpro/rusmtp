@@ -3,8 +3,8 @@
 set -o errexit -o nounset -o pipefail
 
 archive() {
-  local version="$0"
-  local arch="$1"
+  local version="$1"
+  local arch="$2"
   local dist="rusmtp-$version-$arch"
 
   rm -rf "$dist"
@@ -23,6 +23,7 @@ archive() {
 }
 
 mkdir -p archives
+git fetch --tags
 VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))"
 archive "$VERSION" x86_64-unknown-linux-gnu
 archive "$VERSION" x86_64-apple-darwin
