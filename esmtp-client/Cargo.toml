@@ -1,6 +1,6 @@
 [package]
 name = "esmtp_client"
-version = "4.1.0-SNAPSHOT"
+version = "4.0.2"
 authors = ["amanjpro <http://www.amanj.me>"]
 
 [dependencies]
