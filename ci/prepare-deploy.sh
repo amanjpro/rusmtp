@@ -27,4 +27,4 @@ git fetch --tags
 VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))"
 archive "$VERSION" x86_64-unknown-linux-gnu
 archive "$VERSION" x86_64-apple-darwin
-archive "$VERSION" armv7-unknown-linux-gcceabihf
+archive "$VERSION" armv7-unknown-linux-gnueabihf
