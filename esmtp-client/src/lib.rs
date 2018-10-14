@@ -26,7 +26,6 @@ impl SMTPConnection {
             .expect(&format!("Could not resolve the host: {}", host));
 
         let connector = TlsConnector::builder()
-            .expect("Cannot establish connection")
             .build().expect("Cannot establish connection");
 
         let stream = TcpStream::connect(format!("{}:{}", ip, port))
