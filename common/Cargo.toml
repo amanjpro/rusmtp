@@ -1,6 +1,6 @@
 [package]
 name = "common"
-version = "4.1.0-SNAPSHOT"
+version = "4.0.4"
 authors = ["amanjpro <http://www.amanj.me>"]
 
 [dependencies]
