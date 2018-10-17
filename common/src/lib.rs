@@ -1,14 +1,31 @@
 extern crate ini;
+extern crate secstr;
 extern crate docopt;
 extern crate dirs;
 
 #[macro_use]
 extern crate serde_derive;
 
+use secstr::SecStr;
 use ini::Ini;
 use docopt::Docopt;
 use dirs::home_dir;
 use std::process::exit;
+
+#[derive(Clone)]
+pub struct Vault {
+}
+
+impl Vault {
+    pub fn new() -> Self { Vault {} }
+    pub fn encrypt(&self, str: &SecStr) -> SecStr {
+        panic!("Not implemented yet")
+    }
+
+    pub fn decrypt(&self, str: &SecStr) -> SecStr {
+        panic!("Not implemented yet")
+    }
+}
 
 // Define the struct that results from those options.
 #[derive(Deserialize, Debug)]
@@ -31,16 +48,24 @@ pub struct Mail {
 const DEFAULT_HEARTBEAT_IN_MINUTES: u64 = 3;
 const DEFAULT_TIMEOUT_IN_SECONDS: u64 = 30;
 
+#[derive(Debug, PartialEq)]
+pub enum AccountMode {
+    Paranoid,
+    Secure,
+}
+
 #[derive(Debug)]
 pub struct Account {
     pub label: String,
     pub username: Option<String>,
     pub passwordeval: String,
+    pub mode: AccountMode,
     pub host: Option<String>,
     pub port: Option<u16>,
     pub tls: Option<bool>,
     pub heartbeat: u64,
     pub default: bool,
+    pub password: Option<SecStr>,
 }
 
 #[derive(Debug)]
@@ -94,6 +119,15 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 heartbeat
             }).unwrap_or(DEFAULT_HEARTBEAT_IN_MINUTES);
 
+            let mode         = section.get("mode").map(|p| {
+               match p.as_ref() {
+                   "paranoid" => AccountMode::Paranoid,
+                   ""         => AccountMode::Paranoid,
+                   "secure"    => AccountMode::Secure,
+                   &_         => panic!("Possible options for mode is `paranoid` and `secure`"),
+               }
+            }).unwrap_or(AccountMode::Paranoid);
+
             let default      = section.get("default").map(|p| {
                 let default: bool = p.parse()
                     .expect("Invalid bool value in configuration");
@@ -110,7 +144,9 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 port: port,
                 tls: tls,
                 heartbeat: heartbeat,
+                mode: mode,
                 default: default,
+                password: None,
             })
         }
     }

@@ -51,12 +51,13 @@ impl ExternalClient {
         }
     }
 
-    pub fn start(&self, label: &str, passwd: &SecStr) {
+    pub fn start(&self, label: &str, vault: &Vault, passwd: &SecStr) {
         if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
             for stream in listener.incoming() {
                 match stream {
                     Ok(stream) => {
-                      self.send_mail(stream, &passwd);
+                      let decrypted = vault.decrypt(&passwd);
+                      self.send_mail(stream, &decrypted);
                     }
                     _              => {
                         /* connection failed */
@@ -79,7 +80,7 @@ pub struct DefaultClient {
 }
 
 impl DefaultClient {
-    fn get_mailer(&self, passwd: &SecStr) -> Arc<Mutex<SMTPConnection>> {
+    fn get_mailer(&self, vault: &Vault, passwd: &SecStr) -> Arc<Mutex<SMTPConnection>> {
         let account = &self.account;
 
         let label    = &account.label.to_string();
@@ -99,7 +100,7 @@ impl DefaultClient {
         let mut mailer = SMTPConnection::open_connection(&host, *port);
 
         if mailer.supports_login {
-            mailer.login(&SecStr::from(username.clone()), &passwd);
+            mailer.login(&SecStr::from(username.clone()), &vault.decrypt(&passwd));
         }
 
         Arc::new(Mutex::new(mailer))
@@ -115,7 +116,7 @@ impl DefaultClient {
         });
     }
 
-    fn start(&self) {
+    fn start(&self, vault: &Vault) {
         let account = &self.account;
 
         let label = &account.label;
@@ -124,16 +125,26 @@ impl DefaultClient {
             .as_ref()
             .expect(&format!("Password is not defined for {}", &label));
 
-        let mailer = self.get_mailer(&password);
+        let mailer = self.get_mailer(vault, &password);
 
-        let mailer = mailer.clone();
-        let heartbeat = &account.heartbeat;
-        &self.maintain_connection(mailer, *heartbeat);
+        match &account.mode {
+            AccountMode::Paranoid =>
+                {
+                    let mailer = mailer.clone();
+                    let heartbeat = &account.heartbeat;
+                    &self.maintain_connection(mailer, *heartbeat);
+                },
+            _                     => (),
+        }
 
         if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
             for stream in listener.incoming() {
                 match stream {
                     Ok(mut stream) => {
+                        let mailer = if account.mode == AccountMode::Secure {
+                            self.get_mailer(vault, &password)
+                        } else { mailer.clone() };
+
                         let username = &account.username
                             .as_ref()
                             .expect(&format!("Please configure the username for {}", &label));
@@ -145,6 +156,9 @@ impl DefaultClient {
                         mailer.lock().expect("Cannot get the mailer instance to send an email")
                             .send_mail(&username, &recipients, &body);
                         let _ = stream.write_all(OK_SIGNAL.as_bytes());
+                        if &account.mode == &AccountMode::Secure {
+                            stream.shutdown(Shutdown::Both).expect("shutdown function failed");
+                        }
 
                     }
                     _          => {
@@ -166,8 +180,10 @@ impl DefaultClient {
 
 fn start_daemon(conf: Configuration) {
     let mut children = vec![];
+    let vault = Vault::new();
     for account in conf.accounts {
         let client = conf.smtpclient.clone();
+        let vault = vault.clone();
         children.push(thread::spawn(move || {
             let eval = account.passwordeval.clone();
 
@@ -182,14 +198,31 @@ fn start_daemon(conf: Configuration) {
                 // close the socket, if it exists
                 let _ = fs::remove_file(get_socket_path(&account.label));
 
+                let account = if account.mode == AccountMode::Secure {
+                    Account {
+                        label: account.label,
+                        username: account.username,
+                        passwordeval: account.passwordeval,
+                        mode: account.mode,
+                        host: account.host,
+                        port: account.port,
+                        tls: account.tls,
+                        heartbeat: account.heartbeat,
+                        default: account.default,
+                        password: Some(vault.encrypt(&passwd)),
+                    }
+                } else {
+                    account
+                };
+
                 match client {
                     Some(client) => {
                         let external_client = ExternalClient::new(&client);
-                        external_client.start(&account.label, &passwd);
+                        external_client.start(&account.label, &vault, &passwd);
                     },
                     None         => {
                         let default_client = DefaultClient::new(account);
-                        default_client.start();
+                        default_client.start(&vault);
                     },
                 }
             }
