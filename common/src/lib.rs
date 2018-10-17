@@ -28,7 +28,7 @@ pub struct Mail {
     pub body: Vec<u8>,
 }
 
-const DEFAULT_HEARTBEAT_IN_MINUTES: u8 = 3;
+const DEFAULT_HEARTBEAT_IN_MINUTES: u64 = 3;
 const DEFAULT_TIMEOUT_IN_SECONDS: u64 = 30;
 
 #[derive(Debug)]
@@ -39,7 +39,7 @@ pub struct Account {
     pub host: Option<String>,
     pub port: Option<u16>,
     pub tls: Option<bool>,
-    pub heartbeat: u8,
+    pub heartbeat: u64,
     pub default: bool,
 }
 
@@ -89,8 +89,8 @@ pub fn read_config(rc_path: &str) -> Configuration {
             });
 
             let heartbeat      = section.get("heartbeat").map(|p| {
-                let heartbeat: u8 = p.parse()
-                    .expect("Invalid u8 value in configuration");
+                let heartbeat: u64 = p.parse()
+                    .expect("Invalid u64 value in configuration");
                 heartbeat
             }).unwrap_or(DEFAULT_HEARTBEAT_IN_MINUTES);
 
