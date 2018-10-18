@@ -1,12 +1,17 @@
 extern crate ini;
+extern crate rand;
 extern crate secstr;
 extern crate docopt;
 extern crate dirs;
+extern crate crypto;
 
 #[macro_use]
 extern crate serde_derive;
 
 use secstr::SecStr;
+use rand::{thread_rng, Rng};
+use std::collections::LinkedList;
+use std::str;
 use ini::Ini;
 use docopt::Docopt;
 use dirs::home_dir;
@@ -14,16 +19,103 @@ use std::process::exit;
 
 #[derive(Clone)]
 pub struct Vault {
+    pub algorithms: LinkedList<(String, u64)>,
 }
 
 impl Vault {
-    pub fn new() -> Self { Vault {} }
-    pub fn encrypt(&self, str: &SecStr) -> SecStr {
-        panic!("Not implemented yet")
+    pub fn new() -> Self {
+        let all_algorithms = vec![
+            "AES",
+            "Bcrypt",
+            "Blake2B",
+            "Blowfish",
+            "ChaCha20",
+            "Curve25519",
+            "Ed25519",
+            "Fortuna",
+            "Ghash",
+            "HC128",
+            "HMAC",
+            "Poly1305",
+            "RC4",
+            "RIPEMD-160",
+            "Scrypt",
+            "Sosemanuk",
+            "Whirlpool",
+        ];
+
+        let mut rng = thread_rng();
+        let num_algorithms: usize = rng.gen_range(3, all_algorithms.len());
+        let algorithms = vec![0; num_algorithms];
+        let algorithms: LinkedList<(String, u64)> = algorithms.iter().map(|_| {
+            let index: usize = rng.gen_range(0, all_algorithms.len() - 1);
+            let key:u64 = rng.gen();
+            (all_algorithms[index].to_string(), key)
+        }).collect();
+
+        Vault {
+            algorithms: algorithms,
+        }
     }
 
-    pub fn decrypt(&self, str: &SecStr) -> SecStr {
-        panic!("Not implemented yet")
+    pub fn encrypt(&self, passwd: &SecStr) -> SecStr {
+        let passwd = str::from_utf8(passwd.unsecure()).unwrap();
+
+        let encrypted = self.algorithms.iter().fold(passwd, |acc, next| {
+            let (algo, key) = next;
+            match algo.as_ref() {
+                "AES"        => "",
+                "Bcrypt"     => "",
+                "Blake2B"    => "",
+                "Blowfish"   => "",
+                "ChaCha20"   => "",
+                "Curve25519" => "",
+                "Ed25519"    => "",
+                "Fortuna"    => "",
+                "Ghash"      => "",
+                "HC128"      => "",
+                "HMAC"       => "",
+                "Poly1305"   => "",
+                "RC4"        => "",
+                "RIPEMD-160" => "",
+                "Scrypt"     => "",
+                "Sosemanuk"  => "",
+                "Whirlpool"  => "",
+                _            => "",
+            }
+        });
+
+        SecStr::from(encrypted)
+    }
+
+    pub fn decrypt(&self, encrypted: &SecStr) -> SecStr {
+        let encrypted = str::from_utf8(encrypted.unsecure()).unwrap();
+
+        let passwd = self.algorithms.iter().rev().fold(encrypted, |acc, next| {
+            let (algo, key) = next;
+            match algo.as_ref() {
+                "AES"        => "",
+                "Bcrypt"     => "",
+                "Blake2B"    => "",
+                "Blowfish"   => "",
+                "ChaCha20"   => "",
+                "Curve25519" => "",
+                "Ed25519"    => "",
+                "Fortuna"    => "",
+                "Ghash"      => "",
+                "HC128"      => "",
+                "HMAC"       => "",
+                "Poly1305"   => "",
+                "RC4"        => "",
+                "RIPEMD-160" => "",
+                "Scrypt"     => "",
+                "Sosemanuk"  => "",
+                "Whirlpool"  => "",
+                _            => "",
+            }
+        });
+
+        SecStr::from(passwd)
     }
 }
 
