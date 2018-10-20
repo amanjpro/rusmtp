@@ -45,7 +45,7 @@ impl Vault {
         ];
 
         let mut rng = thread_rng();
-        let num_algorithms: usize = rng.gen_range(3, all_algorithms.len());
+        let num_algorithms: usize = rng.gen_range(1, all_algorithms.len());
         let algorithms = vec![0; num_algorithms];
         let algorithms: LinkedList<(String, u64)> = algorithms.iter().map(|_| {
             let index: usize = rng.gen_range(0, all_algorithms.len() - 1);
