@@ -24,7 +24,12 @@ archive() {
 
 mkdir -p archives
 git fetch --tags
-VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))"
-archive "$VERSION" x86_64-unknown-linux-gnu
-archive "$VERSION" x86_64-apple-darwin
-archive "$VERSION" armv7-unknown-linux-gnueabihf
+VERSION="$(git describe --tags "$(git rev-list --tags --max-count=1)")"
+
+if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+  archive "$VERSION" x86_64-unknown-linux-gnu
+  archive "$VERSION" armv7-unknown-linux-gnueabihf
+fi
+if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+  archive "$VERSION" x86_64-apple-darwin
+fi
