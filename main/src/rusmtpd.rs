@@ -51,13 +51,13 @@ impl ExternalClient {
         }
     }
 
-    pub fn start(&self, label: &str, vault: &Vault, passwd: &SecStr) {
+    pub fn start(&self, label: &str, vault: &Vault, passwd: Vec<u8>) {
         if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
             for stream in listener.incoming() {
                 match stream {
                     Ok(stream) => {
-                      let decrypted = vault.decrypt(&passwd);
-                      self.send_mail(stream, &decrypted);
+                      let decrypted = vault.decrypt(passwd.clone());
+                      self.send_mail(stream, &SecStr::from(decrypted));
                     }
                     _              => {
                         /* connection failed */
@@ -80,7 +80,7 @@ pub struct DefaultClient {
 }
 
 impl DefaultClient {
-    fn get_mailer(&self, vault: &Vault, passwd: &SecStr) -> Arc<Mutex<SMTPConnection>> {
+    fn get_mailer(&self, vault: &Vault, passwd: Vec<u8>) -> Arc<Mutex<SMTPConnection>> {
         let account = &self.account;
 
         let label    = &account.label.to_string();
@@ -100,7 +100,7 @@ impl DefaultClient {
         let mut mailer = SMTPConnection::open_connection(&host, *port);
 
         if mailer.supports_login {
-            mailer.login(&SecStr::from(username.clone()), &vault.decrypt(&passwd));
+            mailer.login(&SecStr::from(username.clone()), &SecStr::from(vault.decrypt(passwd.clone())));
         }
 
         Arc::new(Mutex::new(mailer))
@@ -121,11 +121,10 @@ impl DefaultClient {
 
         let label = &account.label;
 
-        let password = &account.password
-            .as_ref()
+        let password = account.password.clone()
             .expect(&format!("Password is not defined for {}", &label));
 
-        let mailer = self.get_mailer(vault, &password);
+        let mailer = self.get_mailer(vault, password.clone());
 
         match &account.mode {
             AccountMode::Paranoid =>
@@ -142,7 +141,7 @@ impl DefaultClient {
                 match stream {
                     Ok(mut stream) => {
                         let mailer = if account.mode == AccountMode::Secure {
-                            self.get_mailer(vault, &password)
+                            self.get_mailer(vault, password.clone())
                         } else { mailer.clone() };
 
                         let username = &account.username
@@ -172,7 +171,6 @@ impl DefaultClient {
         }
     }
 
-
     pub fn new(account: Account) -> Self {
         DefaultClient { account: account }
     }
@@ -180,20 +178,16 @@ impl DefaultClient {
 
 fn start_daemon(conf: Configuration) {
     let mut children = vec![];
-    let vault = Vault::new();
     for account in conf.accounts {
         let client = conf.smtpclient.clone();
-        let vault = vault.clone();
         children.push(thread::spawn(move || {
             let eval = account.passwordeval.clone();
 
             if let Ok(result) = Command::new("sh").arg("-c").arg(eval).stdout(Stdio::piped()).spawn() {
                 let mut child_stdout = result.stdout.expect("Cannot get the handle of the child process");
-                let mut output = String::new();
-                let _ = child_stdout.read_to_string(&mut output);
+                let mut passwd = String::new();
+                let _ = child_stdout.read_to_string(&mut passwd);
 
-                let mut passwd = SecStr::from(output.trim());
-                output.clear();
 
                 // close the socket, if it exists
                 let _ = fs::remove_file(get_socket_path(&account.label));
@@ -209,7 +203,8 @@ fn start_daemon(conf: Configuration) {
                         tls: account.tls,
                         heartbeat: account.heartbeat,
                         default: account.default,
-                        password: Some(vault.encrypt(&passwd)),
+                        password: Some(account.vault.encrypt(&mut passwd)),
+                        vault: account.vault,
                     }
                 } else {
                     account
@@ -218,11 +213,11 @@ fn start_daemon(conf: Configuration) {
                 match client {
                     Some(client) => {
                         let external_client = ExternalClient::new(&client);
-                        external_client.start(&account.label, &vault, &passwd);
+                        external_client.start(&account.label, &account.vault, passwd.as_bytes().to_vec());
                     },
                     None         => {
                         let default_client = DefaultClient::new(account);
-                        default_client.start(&vault);
+                        default_client.start(&default_client.account.vault);
                     },
                 }
             }
