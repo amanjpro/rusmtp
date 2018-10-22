@@ -14,4 +14,3 @@ path = "src/rusmtpc.rs"
 [dependencies]
 serde_json = "1.0.9"
 common = { path = "../common" }
-esmtp_client = { path = "../esmtp-client" }

@@ -23,18 +23,18 @@ update_cargo() {
 }
 
 update_cargo "main/Cargo.toml" "$RELEASE_VERSION"
-update_cargo "esmtp-client/Cargo.toml" "$RELEASE_VERSION"
+update_cargo "protocol/Cargo.toml" "$RELEASE_VERSION"
 update_cargo "common/Cargo.toml" "$RELEASE_VERSION"
 
-git add {main,esmtp-client,common}/Cargo.toml
+git add {main,protocol,common}/Cargo.toml
 git commit -m "Bump version to $RELEASE_VERSION"
 git tag -a "$RELEASE_VERSION" -m "Release $RELEASE_VERSION"
 
 update_cargo "main/Cargo.toml" "$NEXT_SNAPSHOT_VERSION"
-update_cargo "esmtp-client/Cargo.toml" "$NEXT_SNAPSHOT_VERSION"
+update_cargo "protocol/Cargo.toml" "$NEXT_SNAPSHOT_VERSION"
 update_cargo "common/Cargo.toml" "$NEXT_SNAPSHOT_VERSION"
 
-git add {main,esmtp-client,common}/Cargo.toml
+git add {main,protocol,common}/Cargo.toml
 git commit -m "Bump version to $NEXT_SNAPSHOT_VERSION"
 
 git push origin HEAD
