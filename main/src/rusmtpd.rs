@@ -1,9 +1,7 @@
 extern crate serde_json;
 extern crate common;
-extern crate secstr;
 extern crate esmtp_client;
 
-use secstr::SecStr;
 use common::*;
 use esmtp_client::SMTPConnection;
 
@@ -24,7 +22,7 @@ pub struct ExternalClient {
 }
 
 impl ExternalClient {
-    fn send_mail(&self, mut stream: UnixStream, passwd: &SecStr) {
+    fn send_mail(&self, mut stream: UnixStream, passwd: &Vec<u8>) {
         let mut mail = String::new();
         let _ = stream.read_to_string(&mut mail).unwrap();
         let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
@@ -32,7 +30,7 @@ impl ExternalClient {
         let body = mail.body;
 
         let smtp = Command::new(&self.client)
-          .arg(format!("--passwordeval=echo {}", str::from_utf8(passwd.unsecure()).unwrap()))
+          .arg(format!("--passwordeval=echo {}", str::from_utf8(passwd).unwrap()))
           .args(recipients)
           .stdin(Stdio::piped())
           .stdout(Stdio::null())
@@ -51,13 +49,13 @@ impl ExternalClient {
         }
     }
 
-    pub fn start(&self, label: &str, vault: &Vault, passwd: Vec<u8>) {
+    pub fn start(&self, label: &str, vault: &Vault, passwd: &Vec<u8>) {
         if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
             for stream in listener.incoming() {
                 match stream {
                     Ok(stream) => {
                       let decrypted = vault.decrypt(passwd.clone());
-                      self.send_mail(stream, &SecStr::from(decrypted));
+                      self.send_mail(stream, &decrypted.into_bytes());
                     }
                     _              => {
                         /* connection failed */
@@ -80,7 +78,7 @@ pub struct DefaultClient {
 }
 
 impl DefaultClient {
-    fn get_mailer(&self, vault: &Vault, passwd: Vec<u8>) -> Arc<Mutex<SMTPConnection>> {
+    fn get_mailer(&self, vault: &Vault, passwd: &Vec<u8>) -> Arc<Mutex<SMTPConnection>> {
         let account = &self.account;
 
         let label    = &account.label.to_string();
@@ -100,7 +98,8 @@ impl DefaultClient {
         let mut mailer = SMTPConnection::open_connection(&host, *port);
 
         if mailer.supports_login {
-            mailer.login(&SecStr::from(username.clone()), &SecStr::from(vault.decrypt(passwd.clone())));
+            mailer.login(&username.clone().into_bytes(),
+                &vault.decrypt(passwd.clone()).into_bytes());
         }
 
         Arc::new(Mutex::new(mailer))
@@ -124,7 +123,7 @@ impl DefaultClient {
         let password = account.password.clone()
             .expect(&format!("Password is not defined for {}", &label));
 
-        let mailer = self.get_mailer(vault, password.clone());
+        let mailer = self.get_mailer(vault, &password);
 
         match &account.mode {
             AccountMode::Paranoid =>
@@ -141,7 +140,7 @@ impl DefaultClient {
                 match stream {
                     Ok(mut stream) => {
                         let mailer = if account.mode == AccountMode::Secure {
-                            self.get_mailer(vault, password.clone())
+                            self.get_mailer(vault, &password)
                         } else { mailer.clone() };
 
                         let username = &account.username
@@ -213,7 +212,9 @@ fn start_daemon(conf: Configuration) {
                 match client {
                     Some(client) => {
                         let external_client = ExternalClient::new(&client);
-                        external_client.start(&account.label, &account.vault, passwd.as_bytes().to_vec());
+                        external_client.start(&account.label,
+                                              &account.vault, 
+                                              &passwd.into_bytes());
                     },
                     None         => {
                         let default_client = DefaultClient::new(account);
