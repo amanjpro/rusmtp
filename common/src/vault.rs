@@ -74,10 +74,10 @@ mod tests {
     #[test]
     fn test_encryption() {
         let vault = Vault::new();
-        let mut original: &mut String = &mut String::from("very$secure*passw0rd#");
+        let original: &mut String = &mut String::from("very$secure*passw0rd#");
         let mut encrypted: &mut String = &mut original.clone();
-        let mut encrypted = &mut vault.encrypt(&mut encrypted);
-        let mut decrypted = &mut vault.decrypt(encrypted.clone());
+        let encrypted = &mut vault.encrypt(&mut encrypted);
+        let decrypted = &mut vault.decrypt(encrypted.clone());
         assert_ne!(original.clone().into_bytes(), *encrypted);
         assert_eq!(*original, *decrypted);
     }
