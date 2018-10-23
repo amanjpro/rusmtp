@@ -12,8 +12,15 @@ matrix:
   fast_finish: true
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then bash ci/install.sh; fi
+before_script:
+  - rustup component add clippy-preview
 script:
   - cargo update
+  - cargo clippy
+  # if you want the build job to fail when encountering warnings, use
+  - cargo clippy -- -D warnings
+  # in order to also check tests and none-default crate features, use
+  - cargo clippy --all-targets --all-features -- -D warnings
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then bash ci/script_linux.sh; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then bash ci/script_osx.sh; fi
 before_deploy:
