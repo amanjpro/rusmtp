@@ -12,7 +12,7 @@ pub struct ExternalClient {
 }
 
 impl ExternalClient {
-    fn send_mail(&self, mut stream: UnixStream, passwd: &Vec<u8>) {
+    fn send_mail(&self, mut stream: UnixStream, passwd: &[u8]) {
         let mut mail = String::new();
         let _ = stream.read_to_string(&mut mail).unwrap();
         let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
@@ -39,12 +39,12 @@ impl ExternalClient {
         }
     }
 
-    pub fn start(&self, label: &str, vault: &Vault, passwd: &Vec<u8>) {
+    pub fn start(&self, label: &str, vault: &Vault, passwd: &[u8]) {
         if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
             for stream in listener.incoming() {
                 match stream {
                     Ok(stream) => {
-                      let decrypted = vault.decrypt(passwd.clone());
+                      let decrypted = vault.decrypt(passwd);
                       self.send_mail(stream, &decrypted.into_bytes());
                     }
                     _              => {

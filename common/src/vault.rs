@@ -12,6 +12,12 @@ pub struct Vault {
     pub nonce: Vec<u8>,
 }
 
+impl Default for Vault {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Vault {
     pub fn new() -> Self {
         let mut rng = thread_rng();
@@ -37,10 +43,10 @@ impl Vault {
         ring_rand.fill(&mut nonce).expect("Cannot generate nonce");
 
         Vault {
-            salt: salt,
-            opening_key: opening_key,
-            sealing_key: sealing_key,
-            nonce: nonce
+            salt,
+            opening_key,
+            sealing_key,
+            nonce
         }
 
     }
@@ -57,11 +63,12 @@ impl Vault {
         passwd.clone()
     }
 
-    pub fn decrypt(&self, passwd: Vec<u8>) -> String {
-        let mut passwd = passwd.clone();
+    pub fn decrypt(&self, passwd: &[u8]) -> String {
+        let mut passwd = passwd.to_owned();
         let additional_data: [u8; 0] = [];
-        let res = open_in_place(&self.opening_key, &self.nonce, &additional_data, 0,
-                         &mut passwd).expect("Cannot decrypt password");
+        let res = open_in_place(&self.opening_key, &self.nonce,
+                                &additional_data, 0, &mut passwd)
+            .expect("Cannot decrypt password");
         String::from_utf8(res.to_vec())
             .expect("Cannot convert the decrypted password to text")
     }

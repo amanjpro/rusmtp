@@ -70,15 +70,15 @@ pub fn read_config(rc_path: &str) -> Configuration {
 
 
             accounts.push(Account {
-                label: label,
-                host: host,
-                username: username,
+                label,
+                host,
+                username,
                 passwordeval: eval.to_string(),
-                port: port,
-                tls: tls,
-                heartbeat: heartbeat,
-                mode: mode,
-                default: default,
+                port,
+                tls,
+                heartbeat,
+                mode,
+                default,
                 password: None,
                 vault: Vault::new(),
             })
@@ -101,8 +101,8 @@ pub fn read_config(rc_path: &str) -> Configuration {
 
     Configuration {
         smtpclient: smtp,
-        timeout: timeout,
-        accounts: accounts,
+        timeout,
+        accounts,
     }
 }
 
