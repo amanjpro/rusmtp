@@ -1,12 +1,8 @@
 [package]
-name = "esmtp_client"
+name = "protocol"
 version = "4.1.0-SNAPSHOT"
 authors = ["amanjpro <http://www.amanj.me>"]
-
-[features]
-vendored = ["native-tls/vendored"]
 
 [dependencies]
 native-tls = "0.2"
 base64 = "0.9.0"
-secstr = "0.3.0"

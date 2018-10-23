@@ -5,10 +5,7 @@ set -o errexit -o nounset -o pipefail
 sudo apt-get update
 sudo apt-get install -qq gcc-arm-linux-gnueabihf
 sudo apt-get install -y pkg-config libssl-dev
-sudo apt-get install -y libc6-armhf-cross
-sudo apt-get install -y libc6-dev-armhf-cross
 sudo apt-get install -y qemu-user-static
-sudo apt-get install -y binfmt-support
 
 
 # Add targets to rustup
@@ -25,7 +22,7 @@ tar xzf openssl-1.1.1.tar.gz
 export MACHINE=armv7
 export ARCH=arm
 export CC=arm-linux-gnueabihf-gcc
-cd openssl-1.1.1 && ./config shared && make && cd -
+cd openssl-1.1.1 && ./config shared && make
 cd "$current_directory"
 
 cat >"$HOME/.cargo/config" <<EOF

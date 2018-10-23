@@ -1,4 +1,4 @@
 [workspace]
-members = ["esmtp-client",
-           "main",
-           "common"]
+members = ["protocol",
+           "common",
+           "main"]

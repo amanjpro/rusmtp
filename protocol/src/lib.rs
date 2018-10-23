@@ -1,11 +1,9 @@
 pub mod verbs;
 
 extern crate native_tls;
-extern crate secstr;
 extern crate base64;
 
 use verbs::*;
-use secstr::SecStr;
 use base64::encode;
 use std::io::prelude::*;
 use native_tls::{TlsConnector, TlsStream};
@@ -67,15 +65,15 @@ impl SMTPConnection {
         }
     }
 
-    pub fn login(&mut self, username: &SecStr, passwd: &SecStr) {
+    pub fn login(&mut self, username: &Vec<u8>, passwd: &Vec<u8>) {
        SMTPConnection::send(&mut self.stream, format!("{} {}\n", AUTH, LOGIN).as_bytes());
        let response = SMTPConnection::recieve(&mut self.stream);
        SMTPConnection::log(&response);
-       SMTPConnection::send(&mut self.stream, &encode(&username.unsecure()).as_bytes());
+       SMTPConnection::send(&mut self.stream, &encode(&username).as_bytes());
        SMTPConnection::send(&mut self.stream, b"\n");
        let response = SMTPConnection::recieve(&mut self.stream);
        SMTPConnection::log(&response);
-       SMTPConnection::send(&mut self.stream, &encode(&passwd.unsecure()).as_bytes());
+       SMTPConnection::send(&mut self.stream, &encode(&passwd).as_bytes());
        SMTPConnection::send_and_check(&mut self.stream, b"\n",
            &|response| response.starts_with("235"),
            "Invalid username or password");
