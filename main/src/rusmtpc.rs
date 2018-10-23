@@ -22,7 +22,7 @@ fn main () {
 
     let mail = Mail {
         recipients: args.arg_recipients,
-        body: body,
+        body,
         account: args.flag_account,
     };
 
@@ -42,7 +42,7 @@ fn main () {
 
     let mut stream = UnixStream::connect(get_socket_path(account))
         .expect("The daemon is not running, please start it.");
-    let _ = stream.write_all(msg.as_bytes()).unwrap();
+    stream.write_all(msg.as_bytes()).unwrap();
     let _ = stream.shutdown(Shutdown::Write);
     let timeout = Duration::new(conf.timeout, 0);
     let _ = stream.set_read_timeout(Some(timeout));
