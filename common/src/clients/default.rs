@@ -16,28 +16,28 @@ pub struct DefaultClient {
 }
 
 impl DefaultClient {
-    fn get_mailer(&self, vault: &Vault, passwd: &Vec<u8>) -> Arc<Mutex<SMTPConnection>> {
+    fn get_mailer(&self, vault: &Vault, passwd: &[u8]) -> Arc<Mutex<SMTPConnection>> {
         let account = &self.account;
 
         let label    = &account.label.to_string();
 
         let host     = &account.host
             .as_ref()
-            .expect(&format!("Please configure the host for {}", label));
+            .unwrap_or_else(|| panic!("Please configure the host for {}", label));
 
         let username = account.username
             .as_ref()
-            .expect(&format!("Please configure the username for {}", label));
+            .unwrap_or_else(|| panic!("Please configure the username for {}", label));
 
         let port     = account.port
             .as_ref()
-            .expect(&format!("Please configure the port for {}", label));
+            .unwrap_or_else(|| panic!("Please configure the port for {}", label));
 
         let mut mailer = SMTPConnection::open_connection(&host, *port);
 
         if mailer.supports_login {
             mailer.login(&username.clone().into_bytes(),
-                &vault.decrypt(passwd.clone()).into_bytes());
+                &vault.decrypt(passwd).into_bytes());
         }
 
         Arc::new(Mutex::new(mailer))
@@ -59,18 +59,14 @@ impl DefaultClient {
         let label = &account.label;
 
         let password = account.password.clone()
-            .expect(&format!("Password is not defined for {}", &label));
+            .unwrap_or_else(|| panic!("Password is not defined for {}", &label));
 
         let mailer = self.get_mailer(vault, &password);
 
-        match &account.mode {
-            AccountMode::Paranoid =>
-                {
-                    let mailer = mailer.clone();
-                    let heartbeat = &account.heartbeat;
-                    &self.maintain_connection(mailer, *heartbeat);
-                },
-            _                     => (),
+        if let AccountMode::Paranoid = &account.mode {
+            let mailer = mailer.clone();
+            let heartbeat = &account.heartbeat;
+            self.maintain_connection(mailer, *heartbeat);
         }
 
         if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
@@ -83,7 +79,7 @@ impl DefaultClient {
 
                         let username = &account.username
                             .as_ref()
-                            .expect(&format!("Please configure the username for {}", &label));
+                            .unwrap_or_else(|| panic!("Please configure the username for {}", &label));
                         let mut mail = String::new();
                         stream.read_to_string(&mut mail).unwrap();
                         let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
@@ -92,7 +88,7 @@ impl DefaultClient {
                         mailer.lock().expect("Cannot get the mailer instance to send an email")
                             .send_mail(&username, &recipients, &body);
                         let _ = stream.write_all(OK_SIGNAL.as_bytes());
-                        if &account.mode == &AccountMode::Secure {
+                        if account.mode == AccountMode::Secure {
                             stream.shutdown(Shutdown::Both).expect("shutdown function failed");
                         }
 
@@ -109,7 +105,7 @@ impl DefaultClient {
     }
 
     pub fn new(account: Account) -> Self {
-        DefaultClient { account: account }
+        DefaultClient { account }
     }
 }
 

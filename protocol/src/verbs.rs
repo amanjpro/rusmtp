@@ -1,15 +1,15 @@
 // Shamelessly taken from:
 // http://smtpfilter.sourceforge.net/esmtp.html
 
-pub const AUTH: &'static str = "AUTH";
-pub const DATA: &'static str = "DATA";
-pub const EHLO: &'static str = "EHLO";
-pub const MAIL: &'static str = "MAIL";
-pub const NOOP: &'static str = "NOOP";
-pub const STARTTLS: &'static str = "STARTTLS";
-pub const RCPT: &'static str = "RCPT";
-pub const TO: &'static str = "TO";
-pub const FROM: &'static str = "FROM";
-pub const LOGIN: &'static str = "LOGIN";
-pub const XOAUTH2: &'static str = "XOAUTH2";
-pub const RSET: &'static str = "RSET";
+pub const AUTH: &str = "AUTH";
+pub const DATA: &str = "DATA";
+pub const EHLO: &str = "EHLO";
+pub const MAIL: &str = "MAIL";
+pub const NOOP: &str = "NOOP";
+pub const STARTTLS: &str = "STARTTLS";
+pub const RCPT: &str = "RCPT";
+pub const TO: &str = "TO";
+pub const FROM: &str = "FROM";
+pub const LOGIN: &str = "LOGIN";
+pub const XOAUTH2: &str = "XOAUTH2";
+pub const RSET: &str = "RSET";

@@ -54,7 +54,7 @@ pub fn process_args(app_name: &str, usage: &str) -> Args {
 
     let app_version = env!("CARGO_PKG_VERSION");
 
-    let args: Args = Docopt::new(usage.clone())
+    let args: Args = Docopt::new(usage)
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
 

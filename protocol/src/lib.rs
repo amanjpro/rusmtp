@@ -19,18 +19,18 @@ pub struct SMTPConnection {
 impl SMTPConnection {
 
     pub fn open_connection(host: &str, port: u16) -> SMTPConnection {
-        let ips = SMTPConnection::to_ip_address(host);
+        let ips = SMTPConnection::get_ip_address(host);
         let ip = ips.first()
-            .expect(&format!("Could not resolve the host: {}", host));
+            .unwrap_or_else(|| panic!("Could not resolve the host: {}", host));
 
         let connector = TlsConnector::builder()
             .build().expect("Cannot establish connection");
 
         let stream = TcpStream::connect(format!("{}:{}", ip, port))
-            .expect(&format!("Cannot connect to {} on port {}", host, port));
+            .unwrap_or_else(|_| panic!("Cannot connect to {} on port {}", host, port));
 
         let mut stream = connector.connect(host, stream)
-            .expect(&format!("Cannot establish TLS connection to {}", host));
+            .unwrap_or_else(|_| panic!("Cannot establish TLS connection to {}", host));
 
         let response = SMTPConnection::recieve(&mut stream);
 
@@ -49,7 +49,7 @@ impl SMTPConnection {
             SMTPConnection::send_and_check(&mut stream,
                 &format!("{} rusmtp.amanj.me\n", STARTTLS).as_bytes(),
                 &|response| response.starts_with("250"),
-                &format!("Cannot start a TLS connection"));
+                "Cannot start a TLS connection");
 
             SMTPConnection::send_and_check(&mut stream,
                 &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
@@ -59,13 +59,13 @@ impl SMTPConnection {
 
 
         SMTPConnection {
-            stream: stream,
+            stream,
             supports_login: response.contains(LOGIN),
             supports_xoauth2: response.contains(XOAUTH2),
         }
     }
 
-    pub fn login(&mut self, username: &Vec<u8>, passwd: &Vec<u8>) {
+    pub fn login(&mut self, username: &[u8], passwd: &[u8]) {
        SMTPConnection::send(&mut self.stream, format!("{} {}\n", AUTH, LOGIN).as_bytes());
        let response = SMTPConnection::recieve(&mut self.stream);
        SMTPConnection::log(&response);
@@ -107,7 +107,7 @@ impl SMTPConnection {
 
        SMTPConnection::send_and_check(&mut self.stream, format!("{}\r\n", DATA).as_bytes(),
               &|response| response.starts_with("354"),
-              &format!("Cannot start sending email"));
+              "Cannot start sending email");
 
        SMTPConnection::send(&mut self.stream, body);
        SMTPConnection::send_and_check(&mut self.stream, b"\r\n.\r\n",
@@ -138,11 +138,11 @@ impl SMTPConnection {
     }
 
 
-    fn to_ip_address(host: &str) -> Vec<IpAddr> {
+    fn get_ip_address(host: &str) -> Vec<IpAddr> {
         (host, 0).to_socket_addrs()
             .map(|iter|
                  iter.map(|socket_address| socket_address.ip()).collect())
-            .expect(&format!("Cannot resolve host {}", host))
+            .unwrap_or_else(|_| panic!("Cannot resolve host {}", host))
     }
 
 
