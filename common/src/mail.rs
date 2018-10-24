@@ -107,7 +107,7 @@ mod tests {
         let expected = Mail {
             account: None,
             recipients: vec!["f@s.s".to_string(), "s@t.f".to_string()],
-            body: "valuable email".as_bytes().to_vec(),
+            body: b"valuable email".to_vec(),
         };
 
         let mut serialized = expected.serialize();
@@ -120,7 +120,7 @@ mod tests {
         let expected = Mail {
             account: Some("first".to_string()),
             recipients: vec!["f@s.s".to_string(), "s@t.f".to_string()],
-            body: "valuable email".as_bytes().to_vec(),
+            body: b"valuable email".to_vec(),
         };
 
         let mut serialized = expected.serialize();
