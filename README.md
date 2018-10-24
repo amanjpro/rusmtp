@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/amanjpro/rusmtp.svg?branch=master)](https://travis-ci.org/amanjpro/rusmtp)
+
 # SMTP daemon
 
 A Simple SMTP daemon to facilitate working with encrypted passwords.
