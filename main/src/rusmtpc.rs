@@ -8,6 +8,7 @@ use std::net::Shutdown;
 use std::time::Duration;
 use common::*;
 use common::args::*;
+use common::mail::*;
 use common::config::*;
 use std::io::{self, Read, Write};
 
@@ -28,7 +29,6 @@ fn main () {
 
     let msg =serde_json::to_string(&mail)
         .expect("Cannot generate JSON for the given message");
-
 
     let account = &mail.account.unwrap_or({
       let &value = conf.accounts.iter()

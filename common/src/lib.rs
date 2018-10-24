@@ -11,16 +11,10 @@ pub mod vault;
 pub mod config;
 pub mod args;
 pub mod clients;
+pub mod mail;
 
 #[macro_use]
 extern crate serde_derive;
-
-#[derive(Deserialize, Serialize)]
-pub struct Mail {
-    pub account: Option<String>,
-    pub recipients: Vec<String>,
-    pub body: Vec<u8>,
-}
 
 pub fn get_socket_path(account: &str) -> String {
   format!("{}-{}", SOCKET_PATH_PREFIX, account)

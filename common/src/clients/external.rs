@@ -1,4 +1,5 @@
-use {Mail,OK_SIGNAL,ERROR_SIGNAL,get_socket_path};
+use {OK_SIGNAL,ERROR_SIGNAL,get_socket_path};
+use mail::Mail;
 use vault::Vault;
 use std::os::unix::net::{UnixStream, UnixListener};
 use std::process::{Command, Stdio};

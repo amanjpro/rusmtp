@@ -1,5 +1,6 @@
 use protocol::SMTPConnection;
-use {Mail,OK_SIGNAL,get_socket_path};
+use {OK_SIGNAL,get_socket_path};
+use mail::Mail;
 use vault::Vault;
 use account::{Account, AccountMode};
 use std::os::unix::net::UnixListener;
