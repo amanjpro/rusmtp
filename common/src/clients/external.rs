@@ -6,7 +6,6 @@ use std::process::{Command, Stdio};
 use std::str;
 use std::io::{Read, Write};
 use std::error::Error;
-use serde_json;
 
 pub struct ExternalClient {
     pub client: String,
@@ -16,7 +15,7 @@ impl ExternalClient {
     fn send_mail(&self, mut stream: UnixStream, passwd: &[u8]) {
         let mut mail = String::new();
         let _ = stream.read_to_string(&mut mail).unwrap();
-        let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
+        let mail = Mail::deserialize(&mut mail.into_bytes());
         let recipients: Vec<String> = mail.recipients;
         let body = mail.body;
 

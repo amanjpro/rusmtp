@@ -48,7 +48,7 @@ fn start_daemon(conf: Configuration) {
                     Some(client) => {
                         let external_client = ExternalClient::new(&client);
                         external_client.start(&account.label,
-                                              &account.vault, 
+                                              &account.vault,
                                               &passwd.into_bytes());
                     },
                     None         => {

@@ -4,7 +4,6 @@ extern crate dirs;
 extern crate docopt;
 extern crate ini;
 extern crate protocol;
-extern crate serde_json;
 
 pub mod account;
 pub mod vault;

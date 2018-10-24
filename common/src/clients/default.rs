@@ -10,7 +10,6 @@ use std::sync::{Mutex, Arc};
 use std::io::{Read, Write};
 use std::thread;
 use std::ops::Deref;
-use serde_json;
 
 pub struct DefaultClient {
     pub account: Account,
@@ -83,7 +82,7 @@ impl DefaultClient {
                             .unwrap_or_else(|| panic!("Please configure the username for {}", &label));
                         let mut mail = String::new();
                         stream.read_to_string(&mut mail).unwrap();
-                        let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
+                        let mail = Mail::deserialize(&mut mail.into_bytes());
                         let recipients: Vec<&str> = mail.recipients.iter().filter(|&s| s != "--").map(|s| s.deref()).collect();
                         let body = mail.body;
                         mailer.lock().expect("Cannot get the mailer instance to send an email")

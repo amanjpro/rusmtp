@@ -1,6 +1,6 @@
 use std::str;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Mail {
     pub account: Option<String>,
     pub recipients: Vec<String>,
