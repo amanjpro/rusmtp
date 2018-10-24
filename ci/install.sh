@@ -5,8 +5,6 @@ set -o errexit -o nounset -o pipefail
 sudo apt-get update
 sudo apt-get install -qq gcc-arm-linux-gnueabihf
 sudo apt-get install -y pkg-config libssl-dev
-sudo apt-get install -y qemu-user-static
-
 
 # Add targets to rustup
 rustup target add armv7-unknown-linux-gnueabihf
