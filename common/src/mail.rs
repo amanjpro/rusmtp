@@ -50,7 +50,7 @@ impl Mail {
         sink
     }
 
-    fn sanity_check(bytes: &[u8]) -> Result<bool, String> {
+    fn sanity_check(bytes: &[u8]) -> bool {
         // check the length of the bytes
         // magic number
         let mut expected_length = Mail::MAGIC_NUMBER.len();
@@ -65,7 +65,7 @@ impl Mail {
             Some(&value) =>
                 expected_length += value as usize,
             None         =>
-                return Err("Message unexpectedly truncated".to_string()),
+                return false,
         };
         // add combined recipients length
         loop {
@@ -74,9 +74,9 @@ impl Mail {
             match bytes.get(expected_length - 1) {
                 Some(0)      => break,
                 Some(&value) =>
-                { println!("hello, {}", value); expected_length += value as usize},
+                    expected_length += value as usize,
                 None         =>
-                    return Err("Message unexpectedly truncated".to_string()),
+                    return false,
             };
         }
 
@@ -84,7 +84,7 @@ impl Mail {
         let bound_end = expected_length + 7;
         let mut expected_length = expected_length as u64;
         match bytes.get(bound_start..bound_end) {
-            None        => return Err("Message unexpectedly truncated".to_string()),
+            None        => return false,
             Some(slice) => {
                 let body_length = transform_array_of_u8_to_u64(slice);
                 expected_length += body_length + 8;
@@ -92,14 +92,16 @@ impl Mail {
 
         }
         if (bytes.len() as u64) < expected_length {
-            return Err("Message unexpectedly truncated".to_string());
+            return false;
         }
 
-        Ok(true)
+        true
     }
 
     pub fn deserialize(bytes: &mut Vec<u8>) -> Result<Self, String> {
-        let _ = Mail::sanity_check(bytes)?;
+        if ! Mail::sanity_check(bytes) {
+            return Err("Message unexpectedly truncated".to_string());
+        }
 
         // Read and check magic number
         let magic_len = Mail::MAGIC_NUMBER.len();
