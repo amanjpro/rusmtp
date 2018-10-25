@@ -1,11 +1,11 @@
-use {Mail,OK_SIGNAL,ERROR_SIGNAL,get_socket_path};
+use {OK_SIGNAL,ERROR_SIGNAL,get_socket_path};
+use mail::Mail;
 use vault::Vault;
 use std::os::unix::net::{UnixStream, UnixListener};
 use std::process::{Command, Stdio};
 use std::str;
 use std::io::{Read, Write};
 use std::error::Error;
-use serde_json;
 
 pub struct ExternalClient {
     pub client: String,
@@ -15,7 +15,8 @@ impl ExternalClient {
     fn send_mail(&self, mut stream: UnixStream, passwd: &[u8]) {
         let mut mail = String::new();
         let _ = stream.read_to_string(&mut mail).unwrap();
-        let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
+        // TODO: Failure here? should be reported back to rusmtpc
+        let mail = Mail::deserialize(&mut mail.into_bytes()).unwrap();
         let recipients: Vec<String> = mail.recipients;
         let body = mail.body;
 

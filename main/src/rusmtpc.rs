@@ -1,4 +1,3 @@
-extern crate serde_json;
 extern crate common;
 
 
@@ -8,6 +7,7 @@ use std::net::Shutdown;
 use std::time::Duration;
 use common::*;
 use common::args::*;
+use common::mail::*;
 use common::config::*;
 use std::io::{self, Read, Write};
 
@@ -26,23 +26,19 @@ fn main () {
         account: args.flag_account,
     };
 
-    let msg =serde_json::to_string(&mail)
-        .expect("Cannot generate JSON for the given message");
-
-
-    let account = &mail.account.unwrap_or({
+    let account = &mail.account.as_ref().unwrap_or({
       let &value = conf.accounts.iter()
         .filter(|acc| acc.default)
         .map(|x| &x.label)
         .collect::<Vec<_>>()
         .first()
         .expect("Please pass a valid account name or set a default account");
-      value.to_string()
+      value
     });
 
     let mut stream = UnixStream::connect(get_socket_path(account))
         .expect("The daemon is not running, please start it.");
-    stream.write_all(msg.as_bytes()).unwrap();
+    stream.write_all(mail.serialize().as_slice()).unwrap();
     let _ = stream.shutdown(Shutdown::Write);
     let timeout = Duration::new(conf.timeout, 0);
     let _ = stream.set_read_timeout(Some(timeout));

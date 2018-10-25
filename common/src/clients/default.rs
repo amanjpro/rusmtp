@@ -1,5 +1,6 @@
 use protocol::SMTPConnection;
-use {Mail,OK_SIGNAL,get_socket_path};
+use {OK_SIGNAL,get_socket_path};
+use mail::Mail;
 use vault::Vault;
 use account::{Account, AccountMode};
 use std::os::unix::net::UnixListener;
@@ -9,7 +10,6 @@ use std::sync::{Mutex, Arc};
 use std::io::{Read, Write};
 use std::thread;
 use std::ops::Deref;
-use serde_json;
 
 pub struct DefaultClient {
     pub account: Account,
@@ -82,7 +82,8 @@ impl DefaultClient {
                             .unwrap_or_else(|| panic!("Please configure the username for {}", &label));
                         let mut mail = String::new();
                         stream.read_to_string(&mut mail).unwrap();
-                        let mail: Mail = serde_json::from_str(&mail).expect("Cannot parse the mail");
+                        // TODO: Failure here? should be reported back to rusmtpc
+                        let mail = Mail::deserialize(&mut mail.into_bytes()).unwrap();
                         let recipients: Vec<&str> = mail.recipients.iter().filter(|&s| s != "--").map(|s| s.deref()).collect();
                         let body = mail.body;
                         mailer.lock().expect("Cannot get the mailer instance to send an email")
