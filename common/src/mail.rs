@@ -48,22 +48,54 @@ impl Mail {
         sink
     }
 
-    pub fn deserialize(bytes: &mut Vec<u8>) -> Self {
+    pub fn deserialize(bytes: &mut Vec<u8>) -> Result<Self, String> {
+        // check the length of the bytes
+        // magic number
+        let mut expected_length = Mail::MAGIC_NUMBER.len();
+        // major version
+        expected_length = expected_length + 1;
+        // minor version
+        expected_length = expected_length + 1;
+        // account name length
+        expected_length = expected_length + 1;
+        // add account length
+        match bytes.get(expected_length - 1) {
+            Some(&value) =>
+                expected_length = expected_length + value as usize,
+            None         =>
+                return Err("Message unexpectedly truncated".to_string()),
+        };
+        // add combined recipients length
+        loop {
+            // recipient length
+            expected_length = expected_length + 1;
+            match bytes.get(expected_length - 1) {
+                Some(0)      => break,
+                Some(&value) =>
+                { println!("hello, {}", value); expected_length = expected_length + value as usize},
+                None         =>
+                    return Err("Message unexpectedly truncated".to_string()),
+            };
+        }
+        if bytes.len() < expected_length {
+            return Err("Message unexpectedly truncated".to_string());
+        }
+
         // Read and check magic number
         let magic_len = Mail::MAGIC_NUMBER.len();
         let possible_magic: Vec<u8> = bytes.drain(0..magic_len).collect();
         if possible_magic.as_slice() != Mail::MAGIC_NUMBER.as_bytes() {
-            panic!("Bad magic number for message");
+            return Err("Bad magic number for message".to_string());
         }
 
         // Read and check major version
         if bytes.remove(0) != Mail::VERSION_MAJOR {
-            panic!("Bad major version number for message");
+            return Err("Bad major version number for message".to_string());
         };
 
         // Read and check minor version
         if bytes.remove(0) != Mail::VERSION_MINOR {
-            panic!("Bad minor version number for message");
+            return Err("Bad minor version number for message".to_string());
         };
 
         // Read account
@@ -72,8 +104,10 @@ impl Mail {
             0    => None,
             size => {
                 let acc: Vec<u8> = bytes.drain(0..size as usize).collect();
-                let acc = str::from_utf8(acc.as_slice()).unwrap();
-                Some(acc.to_string())
+                match str::from_utf8(acc.as_slice()) {
+                    Ok(acc) => Some(acc.to_string()),
+                    Err(_)  => return Err("Invalid account name".to_string())
+                }
             }
         };
 
@@ -82,19 +116,25 @@ impl Mail {
         let mut next = bytes.remove(0);
         while 0 != next {
             let recipient: Vec<u8> = bytes.drain(0..next as usize).collect();
-            let recipient = str::from_utf8(recipient.as_slice()).unwrap();
-            recipients.push(recipient.to_string());
-            next = bytes.remove(0);
+            match str::from_utf8(recipient.as_slice()) {
+                Ok(recipient) => {
+                    recipients.push(recipient.to_string());
+                    next = bytes.remove(0);
+                },
+                Err(_)        =>
+                    return Err("Invalid recipient".to_string())
+            }
+
         }
 
         // Read the body of the message
         let body = bytes.to_owned();
 
-        Mail {
+        Ok(Mail {
             account,
             recipients,
             body,
-        }
+        })
     }
 }
 
@@ -112,7 +152,7 @@ mod tests {
 
         let mut serialized = expected.serialize();
         let actual = Mail::deserialize(&mut serialized);
-        assert_eq!(expected, actual);
+        assert_eq!(Ok(expected), actual);
     }
 
     #[test]
@@ -125,6 +165,6 @@ mod tests {
 
         let mut serialized = expected.serialize();
         let actual = Mail::deserialize(&mut serialized);
-        assert_eq!(expected, actual);
+        assert_eq!(Ok(expected), actual);
     }
 }

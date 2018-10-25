@@ -82,7 +82,8 @@ impl DefaultClient {
                             .unwrap_or_else(|| panic!("Please configure the username for {}", &label));
                         let mut mail = String::new();
                         stream.read_to_string(&mut mail).unwrap();
-                        let mail = Mail::deserialize(&mut mail.into_bytes());
+                        // TODO: Failure here? should be reported back to rusmtpc
+                        let mail = Mail::deserialize(&mut mail.into_bytes()).unwrap();
                         let recipients: Vec<&str> = mail.recipients.iter().filter(|&s| s != "--").map(|s| s.deref()).collect();
                         let body = mail.body;
                         mailer.lock().expect("Cannot get the mailer instance to send an email")

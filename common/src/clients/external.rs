@@ -15,7 +15,8 @@ impl ExternalClient {
     fn send_mail(&self, mut stream: UnixStream, passwd: &[u8]) {
         let mut mail = String::new();
         let _ = stream.read_to_string(&mut mail).unwrap();
-        let mail = Mail::deserialize(&mut mail.into_bytes());
+        // TODO: Failure here? should be reported back to rusmtpc
+        let mail = Mail::deserialize(&mut mail.into_bytes()).unwrap();
         let recipients: Vec<String> = mail.recipients;
         let body = mail.body;
 
