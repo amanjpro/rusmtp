@@ -50,7 +50,7 @@ impl Mail {
         sink
     }
 
-    pub fn deserialize(bytes: &mut Vec<u8>) -> Result<Self, String> {
+    fn sanity_check(bytes: &Vec<u8>) -> Result<bool, String> {
         // check the length of the bytes
         // magic number
         let mut expected_length = Mail::MAGIC_NUMBER.len();
@@ -94,6 +94,12 @@ impl Mail {
         if (bytes.len() as u64) < expected_length {
             return Err("Message unexpectedly truncated".to_string());
         }
+
+        return Ok(true)
+    }
+
+    pub fn deserialize(bytes: &mut Vec<u8>) -> Result<Self, String> {
+        let _ = Mail::sanity_check(bytes)?;
 
         // Read and check magic number
         let magic_len = Mail::MAGIC_NUMBER.len();
