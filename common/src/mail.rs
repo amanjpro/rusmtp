@@ -53,26 +53,26 @@ impl Mail {
         // magic number
         let mut expected_length = Mail::MAGIC_NUMBER.len();
         // major version
-        expected_length = expected_length + 1;
+        expected_length += 1;
         // minor version
-        expected_length = expected_length + 1;
+        expected_length += 1;
         // account name length
-        expected_length = expected_length + 1;
+        expected_length += 1;
         // add account length
         match bytes.get(expected_length - 1) {
             Some(&value) =>
-                expected_length = expected_length + value as usize,
+                expected_length += value as usize,
             None         =>
                 return Err("Message unexpectedly truncated".to_string()),
         };
         // add combined recipients length
         loop {
             // recipient length
-            expected_length = expected_length + 1;
+            expected_length += 1;
             match bytes.get(expected_length - 1) {
                 Some(0)      => break,
                 Some(&value) =>
-                { println!("hello, {}", value); expected_length = expected_length + value as usize},
+                { println!("hello, {}", value); expected_length += value as usize},
                 None         =>
                     return Err("Message unexpectedly truncated".to_string()),
             };
