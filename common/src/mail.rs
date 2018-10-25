@@ -113,13 +113,13 @@ impl Mail {
 
         // Read recipients
         let mut recipients = Vec::new();
-        let mut next = bytes.remove(0);
-        while 0 != next {
+        loop {
+            let next = bytes.remove(0);
+            if next == 0 { break; }
             let recipient: Vec<u8> = bytes.drain(0..next as usize).collect();
             match str::from_utf8(recipient.as_slice()) {
                 Ok(recipient) => {
                     recipients.push(recipient.to_string());
-                    next = bytes.remove(0);
                 },
                 Err(_)        =>
                     return Err("Invalid recipient".to_string())
