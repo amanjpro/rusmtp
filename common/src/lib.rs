@@ -5,6 +5,7 @@ extern crate docopt;
 extern crate ini;
 extern crate protocol;
 
+
 use std::u64;
 
 pub mod account;
@@ -17,10 +18,15 @@ pub mod mail;
 #[macro_use]
 extern crate serde_derive;
 
+pub fn get_lock_path(account: &str) -> String {
+  format!("{}-{}", FLOCK_PATH_PREFIX, account)
+}
+
 pub fn get_socket_path(account: &str) -> String {
   format!("{}-{}", SOCKET_PATH_PREFIX, account)
 }
 
+static FLOCK_PATH_PREFIX: &'static str = "rusmtp-daemon-flock";
 static SOCKET_PATH_PREFIX: &'static str = "rusmtp-daemon-socket";
 pub static OK_SIGNAL: &'static str = "OK";
 pub static ERROR_SIGNAL: &'static str = "ERROR";
