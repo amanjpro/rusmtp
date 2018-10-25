@@ -1,4 +1,5 @@
 use std::str;
+use {transform_u64_to_array_of_u8, transform_array_of_u8_to_u64};
 
 #[derive(Debug, PartialEq)]
 pub struct Mail {
@@ -42,6 +43,7 @@ impl Mail {
 
         // Write an indicator that the recipients are finished
         sink.push(0);
+        sink.extend_from_slice(&transform_u64_to_array_of_u8(self.body.len() as u64));
 
         // Write the body of the email
         sink.extend(&self.body);
@@ -77,7 +79,19 @@ impl Mail {
                     return Err("Message unexpectedly truncated".to_string()),
             };
         }
-        if bytes.len() < expected_length {
+
+        let bound_start = expected_length - 1;
+        let bound_end = expected_length + 7;
+        let mut expected_length = expected_length as u64;
+        match bytes.get(bound_start..bound_end) {
+            None        => return Err("Message unexpectedly truncated".to_string()),
+            Some(slice) => {
+                let body_length = transform_array_of_u8_to_u64(slice);
+                expected_length += body_length + 8;
+            },
+
+        }
+        if (bytes.len() as u64) < expected_length {
             return Err("Message unexpectedly truncated".to_string());
         }
 
@@ -126,6 +140,9 @@ impl Mail {
             }
 
         }
+
+        // Read the size of the body
+        let _ = bytes.drain(0..8);
 
         // Read the body of the message
         let body = bytes.to_owned();
