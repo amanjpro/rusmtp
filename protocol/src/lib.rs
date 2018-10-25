@@ -79,19 +79,6 @@ impl SMTPConnection {
            "Invalid username or password");
     }
 
-    pub fn keep_alive(&mut self) {
-        SMTPConnection::send_and_check(&mut self.stream,
-          format!("{} {}:<{}>\r\n", MAIL, FROM, "keep-alive").as_bytes(),
-           &|response| response.starts_with("250"),
-           "Connection with the server is lost");
-
-        SMTPConnection::send_and_check(&mut self.stream, &format!("{}\n", RSET).as_bytes(),
-           &|response| response.starts_with("250"),
-           "Connection with the server is lost");
-
-    }
-
-
     pub fn send_mail(&mut self, from: &str, recipients: &[&str], body: &[u8]) {
        SMTPConnection::send_and_check(&mut self.stream,
           format!("{} {}:<{}>\r\n", MAIL, FROM, from).as_bytes(),
@@ -154,5 +141,9 @@ impl SMTPConnection {
 
     fn send(stream: &mut TlsStream<TcpStream>, msg: &[u8]) {
         let _ = stream.write(msg);
+    }
+
+    pub fn shutdown(&mut self) {
+        let _ = self.stream.shutdown();
     }
 }
