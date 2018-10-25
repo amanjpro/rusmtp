@@ -34,18 +34,18 @@ fn transform_u64_to_array_of_u8(x: u64) -> [u8; 8] {
     let b6 : u8 = ((x >> 16) & 0xff) as u8;
     let b7 : u8 = ((x >> 8) & 0xff) as u8;
     let b8 : u8 = (x & 0xff) as u8;
-    return [b1, b2, b3, b4, b5, b6, b7, b8]
+    [b1, b2, b3, b4, b5, b6, b7, b8]
 }
 
 fn transform_array_of_u8_to_u64(bytes: &[u8]) -> u64 {
-    let mut number = bytes[7] as u64;
-    number |= (bytes[6] as u64) << 8;
-    number |= (bytes[5] as u64) << 16;
-    number |= (bytes[4] as u64) << 24;
-    number |= (bytes[3] as u64) << 32;
-    number |= (bytes[2] as u64) << 40;
-    number |= (bytes[1] as u64) << 48;
-    number |= (bytes[0] as u64) << 56;
+    let mut number = u64::from(bytes[7]);
+    number |= u64::from(bytes[6]) << 8;
+    number |= u64::from(bytes[5]) << 16;
+    number |= u64::from(bytes[4]) << 24;
+    number |= u64::from(bytes[3]) << 32;
+    number |= u64::from(bytes[2]) << 40;
+    number |= u64::from(bytes[1]) << 48;
+    number |= u64::from(bytes[0]) << 56;
     number
 }
 
@@ -64,7 +64,7 @@ mod tests {
         assert_eq!(u64::MAX, check(u64::MAX));
         assert_eq!(u64::MIN, check(u64::MIN));
         assert_eq!(183, check(183));
-        assert_eq!(38328183, check(38328183));
+        assert_eq!(38_328_183, check(38_328_183));
         assert_eq!(u64::MAX - 1, check(u64::MAX -1 ));
         assert_eq!(u64::MIN + 1, check(u64::MIN + 1));
     }
