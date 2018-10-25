@@ -3,6 +3,7 @@ extern crate common;
 
 
 use std::fs::File;
+use std::path::Path;
 use std::{thread, time};
 use std::io::{self, Read, Write};
 use std::os::unix::net::UnixStream;
@@ -39,6 +40,10 @@ fn main () {
         .expect("Please pass a valid account name or set a default account");
       value
     });
+
+    if ! Path::new(&get_lock_path(account)).exists() {
+        let _ = File::create(get_lock_path(account));
+    }
 
     let lock_file = File::open(get_lock_path(account)).unwrap();
     let ten_millis = time::Duration::from_millis(10);

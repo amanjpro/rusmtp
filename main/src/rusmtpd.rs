@@ -26,22 +26,16 @@ fn start_daemon(conf: Configuration) {
                 // close the socket, if it exists
                 let _ = fs::remove_file(get_socket_path(&account.label));
 
-                let account = if account.mode == AccountMode::Secure {
-                    Account {
-                        label: account.label,
-                        username: account.username,
-                        passwordeval: account.passwordeval,
-                        mode: account.mode,
-                        host: account.host,
-                        port: account.port,
-                        tls: account.tls,
-                        heartbeat: account.heartbeat,
-                        default: account.default,
-                        password: Some(account.vault.encrypt(&mut passwd)),
-                        vault: account.vault,
-                    }
-                } else {
-                    account
+                let account = Account {
+                    label: account.label,
+                    username: account.username,
+                    passwordeval: account.passwordeval,
+                    host: account.host,
+                    port: account.port,
+                    tls: account.tls,
+                    default: account.default,
+                    password: Some(account.vault.encrypt(&mut passwd)),
+                    vault: account.vault,
                 };
 
                 match client {

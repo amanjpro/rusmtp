@@ -22,20 +22,6 @@ passwordeval=echo password
 port=465
 ; If TLS should be used
 tls=true
-; How often (in minutes) the built-in SMTP-protocol should send a
-; heartbeat to the server to maintain the connection
-heartbeat=3
-; Add a mode for the connection of this account:
-; Possible modes:
-; - paranoid (default mode): basically tries to keep the connection
-;   to the server as long as possible, and doesn't keep the password
-;   in memory, this mode re-runs passwordeval whenever
-;   email is sent with an account that has already lost its connection.
-; - secure: Keeps the encrypted password in memory, the key for
-;   encryption is randomly generated upon startup, and the password
-;   is encrypted a random number of times, using randomly selected
-;   algorithms. If this mode is selected, heartbeat is ignored.
-mode=paranoid
 ; Is this account the default account? If so, you can skip passing
 ; the account to the SMTP client, which picks this one
 ; false or true, case sensitive

@@ -1,5 +1,5 @@
 use ini::Ini;
-use account::{Account, AccountMode};
+use account::Account;
 use vault::Vault;
 
 pub struct Configuration {
@@ -46,21 +46,6 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 tls
             });
 
-            let heartbeat      = section.get("heartbeat").map(|p| {
-                let heartbeat: u64 = p.parse()
-                    .expect("Invalid u64 value in configuration");
-                heartbeat
-            }).unwrap_or(DEFAULT_HEARTBEAT_IN_MINUTES);
-
-            let mode         = section.get("mode").map(|p| {
-               match p.as_ref() {
-                   "paranoid" => AccountMode::Paranoid,
-                   ""         => AccountMode::Paranoid,
-                   "secure"    => AccountMode::Secure,
-                   &_         => panic!("Possible options for mode is `paranoid` and `secure`"),
-               }
-            }).unwrap_or(AccountMode::Paranoid);
-
             let default      = section.get("default").map(|p| {
                 let default: bool = p.parse()
                     .expect("Invalid bool value in configuration");
@@ -76,8 +61,6 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 passwordeval: eval.to_string(),
                 port,
                 tls,
-                heartbeat,
-                mode,
                 default,
                 password: None,
                 vault: Vault::new(),
@@ -106,5 +89,4 @@ pub fn read_config(rc_path: &str) -> Configuration {
     }
 }
 
-const DEFAULT_HEARTBEAT_IN_MINUTES: u64 = 3;
 const DEFAULT_TIMEOUT_IN_SECONDS: u64 = 30;
