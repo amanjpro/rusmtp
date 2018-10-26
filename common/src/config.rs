@@ -73,8 +73,7 @@ pub fn read_config(rc_path: &str) -> Configuration {
     }
 
     let default_accounts = accounts.iter()
-        .filter(|acc| acc.default)
-        .len();
+        .fold(0,|z,y| if y.default { z + 1 } else { z} );
 
     if default_accounts > 1 {
         panic!("At most one account can be set to default");
