@@ -74,7 +74,6 @@ pub fn read_config(rc_path: &str) -> Configuration {
 
     let default_accounts = accounts.iter()
         .filter(|acc| acc.default)
-        .collect::<Vec<_>>()
         .len();
 
     if default_accounts > 1 {
