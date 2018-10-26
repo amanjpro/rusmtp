@@ -21,6 +21,7 @@ Add (set sendmail="/PATH/TO/rusmtp") in muttrc.
 .IP \[bu]
 Using GnuGP, encrypt your password and save the encrypted password.
 .IP \[bu]
+.TP
 Add (passwordeval=gpg --quiet --no-tty --decrypt /PATH/TO/ENCRYPTED-PASSWORD.gpg) to
 rusmtprc for each account.
 .IP \[bu]
@@ -35,7 +36,6 @@ Make rusmtpd to startup upon boot.
 An option to specify an alternative configuration file for the daemon. By default the daemon reads from $HOME/.rusmtprc, but this options overrides it. An example configuration file is already installed in $HOME/.rusmtprc.
 
 .SH LIMITATIONS
-.TP
 
 At its current state, the builtin SMTP client only supports ESMTP and
 only supports LOGIN (i.e. it uses username and password to authenticate
