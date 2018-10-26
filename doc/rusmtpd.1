@@ -1,7 +1,6 @@
 .TH RUSMTPD 1
 .SH NAME
-rusmtpd \- an SMTP-client daemon that maintains connection with the
-SMTP-server for added security.
+rusmtpd \- A simple and secure SMTP-client daemon.
 
 .SH SYNOPSIS
 .B rusmtpd
@@ -9,32 +8,41 @@ SMTP-server for added security.
 
 .SH DESCRIPTION
 .B rusmtpd
-A Simple SMTP daemon to facilitate working with encrypted passwords.
+A simple standalone SMTP daemon.
 
-SMTP clients by default do not maintain the connection with the server.
-If you don't like to enter your password whenever you send an email,
-or the fact that your email/SMTP client stores passwords in plain text,
-then this is the right tool for you.
+A typical scenario of using rusmtp is with clients like NeoMutt, where you do
+not store your passwords unencrypted, but you still wish to get all the
+benefits of using NeoMutt.
 
-This consists of two parts, a server that tries to get the password upon
-starting (maybe decrypting it from gpg?), and a client that sends the
-email to be sent to the server.
+A typical installation would be as follows:
 
-By default the daemon uses a builtin SMTP client that maintains the connection
-with the SMTP server, does not keep the unencrypted password in memory. The
-builtin SMTP client uses a secure connection (TLS) whenever available. If you
-are sick with the builtin client or you are fine to keep the password
-unencrypted in the memory, then you can configure the daemon to launch a
-third-party SMTP client without losing any convenience.
-
-At its current state, the builtin SMTP client only supports ESMTP and
-only supports LOGIN (i.e. it uses username and password to authenticate
-the connection).
+.IP \[bu] 4
+Add (set sendmail="/PATH/TO/rusmtp") in muttrc.
+.IP \[bu]
+Using GnuGP, encrypt your password and save the encrypted password.
+.IP \[bu]
+Add (passwordeval=gpg --quiet --no-tty --decrypt /PATH/TO/ENCRYPTED-PASSWORD.gpg) to
+rusmtprc for each account.
+.IP \[bu]
+Add the password to decrypt the encrypted password in gpg-agent, to avoid entering
+the password upon starting the deamon.
+.IP \[bu]
+Make rusmtpd to startup upon boot.
 
 .SH OPTIONS
 .TP
 .BR \-\-rusmtprc=\fIPATH_TO_SMTPDRC\fR
 An option to specify an alternative configuration file for the daemon. By default the daemon reads from $HOME/.rusmtprc, but this options overrides it. An example configuration file is already installed in $HOME/.rusmtprc.
 
+.SH LIMITATIONS
+.TP
+
+At its current state, the builtin SMTP client only supports ESMTP and
+only supports LOGIN (i.e. it uses username and password to authenticate
+the connection).
+
 .SH SEE ALSO
 .B rusmtpc(1)
+
+.SH SOURCE CODE
+.B https://github.com/amanjpro/rusmtp
