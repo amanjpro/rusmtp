@@ -2,27 +2,30 @@
 
 # SMTP daemon
 
-A Simple SMTP daemon to facilitate working with encrypted passwords.
+A simple and secure SMTP-client daemon. 
 
-SMTP clients by default do not maintain the connection with the server.
-If you don't like to enter your password whenever you send an email,
-or the fact that your email/SMTP client stores passwords in plain text,
-then this is the right tool for you.
+A typical scenario of using `rusmtp` is with clients like `NeoMutt`, where you
+do not store your passwords unencrypted, but you still wish to get all the
+benefits of using `NeoMutt`.
 
-This consists of two parts, a server that tries to get the password upon
-starting (maybe decrypting it from gpg?), and a client that sends the
-email to be sent to the server.
+A typical installation would be as follows:
 
-By default the daemon uses a builtin SMTP client that maintains the connection
-with the SMTP server, does not keep the unencrypted password in memory. The
-builtin SMTP client uses a secure connection (TLS) whenever available. If you
-are sick with the builtin client or you are fine to keep the password
-unencrypted in the memory, then you can configure the daemon to launch a
-third-party SMTP client without losing any convenience.
+- Add `set sendmail="/PATH/TO/rusmtp"` in muttrc.
+- Using GnuGP, encrypt your password and save the encrypted password.
+- Add `passwordeval=gpg --quiet --no-tty --decrypt /PATH/TO/ENCRYPTED-PASSWORD.gpg`
+  to rusmtprc for each account.
+- Add the password to decrypt the encrypted password in gpg-agent, to avoid
+  entering the password upon starting the deamon.
+- Make rusmtpd to startup upon boot.
 
 At its current state, the builtin SMTP client only supports ESMTP and
 only supports LOGIN (i.e. it uses username and password to authenticate
 the connection).
+
+## Building from the source
+
+`rusmtp` is written in rust, and it can be built with `cargo`, to build it simply
+run `cargo build --release` and have the daemon built for device.
 
 ## Installation
 
@@ -31,7 +34,7 @@ the connection).
   `sudo ./install`, it copies the executables to `/usr/local/bin/{rusmtpc,rusmtpd}`
 - Update the `~/.rusmtprc` file to match your preferences, for example
   the passwordeval setting can be:
-  `passwordeval=gpg --quiet --no-tty --decrypt /path/to/encrypted-password.gpg`
+  `passwordeval=gpg --quiet --no-tty --decrypt /PATH/TO/ENCRYPTED-PASSWORD.gpg`
 - Update your email-client configuration to use `/usr/local/bin/rusmtpc` for
   sending emails.
 - Make the `/usr/local/bin/rusmtpd` daemon to run on startup.
