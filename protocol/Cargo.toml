@@ -1,6 +1,6 @@
 [package]
 name = "protocol"
-version = "4.1.0-SNAPSHOT"
+version = "4.1.0"
 authors = ["amanjpro <http://www.amanj.me>"]
 
 [features]
