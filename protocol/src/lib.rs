@@ -3,6 +3,9 @@ pub mod verbs;
 extern crate native_tls;
 extern crate base64;
 
+#[macro_use]
+extern crate log;
+
 use verbs::*;
 use base64::encode;
 use std::io::prelude::*;
@@ -34,7 +37,7 @@ impl SMTPConnection {
 
         let response = SMTPConnection::recieve(&mut stream);
 
-        SMTPConnection::log(&response);
+        debug!("{}", &response);
 
         SMTPConnection::true_or_panic(
             response.starts_with("220") && response.contains("ESMTP"),
@@ -68,11 +71,11 @@ impl SMTPConnection {
     pub fn login(&mut self, username: &[u8], passwd: &[u8]) {
        SMTPConnection::send(&mut self.stream, format!("{} {}\n", AUTH, LOGIN).as_bytes());
        let response = SMTPConnection::recieve(&mut self.stream);
-       SMTPConnection::log(&response);
+       debug!("{}", &response);
        SMTPConnection::send(&mut self.stream, &encode(&username).as_bytes());
        SMTPConnection::send(&mut self.stream, b"\n");
        let response = SMTPConnection::recieve(&mut self.stream);
-       SMTPConnection::log(&response);
+       debug!("{}", &response);
        SMTPConnection::send(&mut self.stream, &encode(&passwd).as_bytes());
        SMTPConnection::send_and_check(&mut self.stream, b"\n",
            &|response| response.starts_with("235"),
@@ -107,15 +110,11 @@ impl SMTPConnection {
                       on_failure_msg: &str) -> String {
        SMTPConnection::send(&mut stream, msg);
        let response = SMTPConnection::recieve(&mut stream);
-       SMTPConnection::log(&response);
+       debug!("{}", &response);
        SMTPConnection::true_or_panic(
            check(&response),
            on_failure_msg);
        response
-    }
-
-    fn log(msg: &str) {
-        println!("{}", msg)
     }
 
     fn true_or_panic(flag: bool, panic_message: &str) {
