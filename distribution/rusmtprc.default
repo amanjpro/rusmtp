@@ -1,3 +1,16 @@
+; This section contains the configurations for the application
+; i.e. both daemon and client
+; [App]
+; The root path of socket files, if none is provided the directory
+; of where executables are installed is assumed
+; socket is a channel per email account between the daemon and the
+; client
+socket-root-path=/tmp
+; The root path of flock files, if none is provided the directory
+; of where executables are installed is assumed
+; flock is used to guarantee that there is exactly one write to
+; a socket at a time
+flock-root-path=/tmp
 ; This section contains the configurations for the daemon
 ; [Daemon]
 ; custom smtp clients
