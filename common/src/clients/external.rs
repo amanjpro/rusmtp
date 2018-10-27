@@ -40,8 +40,8 @@ impl ExternalClient {
         }
     }
 
-    pub fn start(&self, label: &str, vault: &Vault, passwd: &[u8]) {
-        if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
+    pub fn start(&self, label: &str, prefix: &str, vault: &Vault, passwd: &[u8]) {
+        if let Ok(listener) = UnixListener::bind(get_socket_path(prefix, &label)) {
             for stream in listener.incoming() {
                 match stream {
                     Ok(stream) => {
