@@ -18,12 +18,12 @@ pub mod mail;
 #[macro_use]
 extern crate serde_derive;
 
-pub fn get_lock_path(account: &str) -> String {
-  format!("{}-{}", FLOCK_PATH_PREFIX, account)
+pub fn get_lock_path(prefix: &str, account: &str) -> String {
+  format!("{}/{}-{}", prefix, FLOCK_PATH_PREFIX, account)
 }
 
-pub fn get_socket_path(account: &str) -> String {
-  format!("{}-{}", SOCKET_PATH_PREFIX, account)
+pub fn get_socket_path(prefix: &str, account: &str) -> String {
+  format!("{}/{}-{}", prefix, SOCKET_PATH_PREFIX, account)
 }
 
 static FLOCK_PATH_PREFIX: &'static str = "rusmtp-daemon-flock";

@@ -39,7 +39,7 @@ impl DefaultClient {
         mailer
     }
 
-    pub fn start(&self, vault: &Vault) {
+    pub fn start(&self, prefix: &str, vault: &Vault) {
         let account = &self.account;
 
         let label = &account.label;
@@ -47,7 +47,7 @@ impl DefaultClient {
         let password = account.password.clone()
             .unwrap_or_else(|| panic!("Password is not defined for {}", &label));
 
-        if let Ok(listener) = UnixListener::bind(get_socket_path(&label)) {
+        if let Ok(listener) = UnixListener::bind(get_socket_path(prefix, &label)) {
             for stream in listener.incoming() {
                 match stream {
                     Ok(mut stream) => {

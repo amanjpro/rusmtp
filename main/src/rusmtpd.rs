@@ -14,6 +14,7 @@ fn start_daemon(conf: Configuration) {
     let mut children = vec![];
     for account in conf.accounts {
         let client = conf.smtpclient.clone();
+        let socket_root = conf.socket_root.clone();
         children.push(thread::spawn(move || {
             let eval = account.passwordeval.clone();
 
@@ -24,7 +25,7 @@ fn start_daemon(conf: Configuration) {
 
 
                 // close the socket, if it exists
-                let _ = fs::remove_file(get_socket_path(&account.label));
+                let _ = fs::remove_file(get_socket_path(&socket_root, &account.label));
 
                 let account = Account {
                     label: account.label,
@@ -42,12 +43,14 @@ fn start_daemon(conf: Configuration) {
                     Some(client) => {
                         let external_client = ExternalClient::new(&client);
                         external_client.start(&account.label,
+                                              &socket_root,
                                               &account.vault,
                                               &passwd.into_bytes());
                     },
                     None         => {
                         let default_client = DefaultClient::new(account);
-                        default_client.start(&default_client.account.vault);
+                        default_client.start(&socket_root, &default_client.account.vault);
+                                              
                     },
                 }
             }
