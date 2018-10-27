@@ -56,7 +56,6 @@ impl DefaultClient {
                         let username = &account.username
                             .as_ref()
                             .unwrap_or_else(|| panic!("Please configure the username for {}", &label));
-    println!("HERE");
                         let mut mail = String::new();
                         stream.read_to_string(&mut mail).unwrap();
                         // TODO: Failure here? should be reported back to rusmtpc
