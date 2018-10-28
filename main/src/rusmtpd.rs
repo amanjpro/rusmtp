@@ -10,6 +10,11 @@ use std::process::{Command, Stdio};
 use std::io::Read;
 use std::{thread,fs};
 
+fn print_welcome_message() {
+    println!("rusmtpd daemon started...");
+    println!("Ready to send emails");
+}
+
 fn start_daemon(conf: Configuration) {
     let mut children = vec![];
     for account in conf.accounts {
@@ -68,6 +73,7 @@ fn main() {
     let args = process_args("rusmtpd", &rusmtpd_usage("rusmtpd"));
     let conf = read_config(&args.flag_rusmtprc);
 
+    print_welcome_message();
     start_daemon(conf);
 }
 
