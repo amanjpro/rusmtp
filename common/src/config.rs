@@ -64,8 +64,6 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 default
             }).unwrap_or(false);
 
-
-
             accounts.push(Account {
                 label,
                 host,
