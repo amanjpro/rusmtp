@@ -41,17 +41,20 @@ fn main () {
       value
     });
 
-    let flock_path = get_lock_path(&conf.socket_root, account);
+    let flock_path = get_lock_path(&conf.flock_root, account);
+
     if ! Path::new(&flock_path).exists() {
         let _ = File::create(&flock_path);
     }
 
-    let lock_file = File::open(account).unwrap();
+    let lock_file = File::open(&flock_path).unwrap();
     let ten_millis = time::Duration::from_millis(10);
     while lock_file.lock_exclusive().is_err() {
         thread::sleep(ten_millis);
     }
-    let mut stream = UnixStream::connect(flock_path)
+
+    let socket_path = get_socket_path(&conf.socket_root, account);
+    let mut stream = UnixStream::connect(socket_path)
         .expect("The daemon is not running, please start it.");
     stream.write_all(mail.serialize().as_slice()).unwrap();
     let _ = stream.shutdown(Shutdown::Write);
