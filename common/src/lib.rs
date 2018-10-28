@@ -19,11 +19,19 @@ pub mod mail;
 extern crate serde_derive;
 
 pub fn get_lock_path(prefix: &str, account: &str) -> String {
-  format!("{}/{}-{}", prefix, FLOCK_PATH_PREFIX, account)
+  if prefix.is_empty() {
+      format!("{}-{}", FLOCK_PATH_PREFIX, account)
+  } else {
+      format!("{}/{}-{}", prefix, FLOCK_PATH_PREFIX, account)
+  }
 }
 
 pub fn get_socket_path(prefix: &str, account: &str) -> String {
-  format!("{}/{}-{}", prefix, SOCKET_PATH_PREFIX, account)
+  if prefix.is_empty() {
+      format!("{}-{}", SOCKET_PATH_PREFIX, account)
+  } else {
+      format!("{}/{}-{}", prefix, SOCKET_PATH_PREFIX, account)
+  }
 }
 
 static FLOCK_PATH_PREFIX: &'static str = "rusmtp-daemon-flock";
