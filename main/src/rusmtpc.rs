@@ -31,7 +31,7 @@ fn main () {
         account: args.flag_account,
     };
 
-    let account = &mail.account.as_ref().unwrap_or({
+    let account = &mail.account.as_ref().unwrap_or_else(|| {
       let &value = conf.accounts.iter()
         .filter(|acc| acc.default)
         .map(|x| &x.label)
