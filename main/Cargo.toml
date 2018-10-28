@@ -12,5 +12,5 @@ name = "rusmtpc"
 path = "src/rusmtpc.rs"
 
 [dependencies]
-fs2 = "0.4.3"
+fs2 = "0.4"
 common = { path = "../common" }
