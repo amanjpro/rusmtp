@@ -1,5 +1,6 @@
 pub mod verbs;
 
+extern crate common;
 extern crate native_tls;
 extern crate base64;
 
@@ -7,6 +8,7 @@ extern crate base64;
 extern crate log;
 
 use verbs::*;
+use common::log_and_panic;
 use base64::encode;
 use std::io::prelude::*;
 use native_tls::{TlsConnector, TlsStream};
@@ -22,38 +24,50 @@ pub struct SMTPConnection {
 impl SMTPConnection {
 
     pub fn open_connection(host: &str, port: u16) -> SMTPConnection {
+        debug!("Openning connection with {}", host);
         let ips = SMTPConnection::get_ip_address(host);
         let ip = ips.first()
-            .unwrap_or_else(|| panic!("Could not resolve the host: {}", host));
+            .unwrap_or_else(||
+                log_and_panic(&format!("Could not resolve the host: {}", host)));
 
+        debug!("Securing connection with {}", host);
         let connector = TlsConnector::builder()
-            .build().expect("Cannot establish connection");
+            .build()
+            .unwrap_or_else(|_| log_and_panic("Cannot establish connection"));
 
+        debug!("Securing connection with {} on port {}", ip, port);
         let stream = TcpStream::connect(format!("{}:{}", ip, port))
-            .unwrap_or_else(|_| panic!("Cannot connect to {} on port {}", host, port));
+            .unwrap_or_else(|_|
+                log_and_panic(&format!("Cannot connect to {} on port {}", host, port)));
 
+        debug!("Establishing TLS connection with {}", host);
         let mut stream = connector.connect(host, stream)
-            .unwrap_or_else(|_| panic!("Cannot establish TLS connection to {}", host));
+            .unwrap_or_else(|_|
+                log_and_panic(&format!("Cannot establish TLS connection to {}", host)));
 
         let response = SMTPConnection::recieve(&mut stream);
 
         debug!("{}", &response);
 
+        debug!("Checking the presence of ESMTP protocol");
         SMTPConnection::true_or_panic(
             response.starts_with("220") && response.contains("ESMTP"),
             &format!("SMTP Server {} is not accepting clients", host));
 
+        debug!("Shaking hands with the ESMTP server");
         let response = SMTPConnection::send_and_check(&mut stream,
             &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
             &|response| response.starts_with("250"),
             &format!("SMTP Server {} does not support ESMTP", host));
 
         if response.contains(STARTTLS) {
+            debug!("Checking if TLS is supported");
             SMTPConnection::send_and_check(&mut stream,
                 &format!("{} rusmtp.amanj.me\n", STARTTLS).as_bytes(),
                 &|response| response.starts_with("250"),
                 "Cannot start a TLS connection");
 
+            debug!("Shaking hands with the ESMTP server again, but this time over TLS");
             SMTPConnection::send_and_check(&mut stream,
                 &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
                 &|response| response.starts_with("250"),
@@ -119,7 +133,7 @@ impl SMTPConnection {
 
     fn true_or_panic(flag: bool, panic_message: &str) {
         if ! flag {
-            panic!(panic_message.to_string())
+            log_and_panic(panic_message)
         }
     }
 
@@ -128,14 +142,16 @@ impl SMTPConnection {
         (host, 0).to_socket_addrs()
             .map(|iter|
                  iter.map(|socket_address| socket_address.ip()).collect())
-            .unwrap_or_else(|_| panic!("Cannot resolve host {}", host))
+            .unwrap_or_else(|_|
+                log_and_panic(&format!("Cannot resolve host {}", host)))
     }
 
 
     fn recieve(stream: &mut TlsStream<TcpStream>) -> String {
         let mut response = [0; 4096];
         let _ = stream.read(&mut response);
-        std::str::from_utf8(&response).expect("Cannot decode the message").to_string()
+        std::str::from_utf8(&response).
+            unwrap_or_else(|_| log_and_panic("Cannot decode the message")).to_string()
     }
 
     fn send(stream: &mut TlsStream<TcpStream>, msg: &[u8]) {
