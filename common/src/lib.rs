@@ -3,7 +3,6 @@ extern crate rand;
 extern crate dirs;
 extern crate docopt;
 extern crate ini;
-extern crate protocol;
 
 
 use std::u64;
@@ -12,7 +11,6 @@ pub mod account;
 pub mod vault;
 pub mod config;
 pub mod args;
-pub mod clients;
 pub mod mail;
 
 #[macro_use]

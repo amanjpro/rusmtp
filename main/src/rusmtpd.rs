@@ -1,11 +1,14 @@
 extern crate common;
+extern crate protocol;
+
+pub mod clients;
 
 use common::*;
 use common::args::*;
 use common::config::*;
 use common::account::*;
-use common::clients::external::*;
-use common::clients::default::*;
+use clients::external::*;
+use clients::default::*;
 use std::process::{Command, Stdio};
 use std::io::Read;
 use std::{thread,fs};

@@ -14,3 +14,4 @@ path = "src/rusmtpc.rs"
 [dependencies]
 fs2 = "0.4"
 common = { path = "../common" }
+protocol = { path = "../protocol" }

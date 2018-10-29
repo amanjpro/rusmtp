@@ -1,5 +1,5 @@
 use protocol::SMTPConnection;
-use {OK_SIGNAL,get_socket_path};
+use common::{OK_SIGNAL,get_socket_path};
 use mail::Mail;
 use vault::Vault;
 use account::Account;

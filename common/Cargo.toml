@@ -11,4 +11,3 @@ docopt = "1.0"
 dirs = "1.0"
 ring = "0.13"
 rand = "0.5"
-protocol = { path = "../protocol" }
