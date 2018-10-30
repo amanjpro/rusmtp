@@ -14,28 +14,56 @@ pub struct ExternalClient {
 impl ExternalClient {
     fn send_mail(&self, mut stream: UnixStream, passwd: &[u8]) {
         let mut mail = String::new();
-        let _ = stream.read_to_string(&mut mail).unwrap();
-        // TODO: Failure here? should be reported back to rusmtpc
-        let mail = Mail::deserialize(&mut mail.into_bytes()).unwrap();
-        let recipients: Vec<String> = mail.recipients;
-        let body = mail.body;
+        if let Err(e) = stream.read_to_string(&mut mail) {
+            error!("Error happened while reading the incoming email {}", e);
+            let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+        }
 
-        let smtp = Command::new(&self.client)
-          .arg(format!("--passwordeval=echo {}", str::from_utf8(passwd).unwrap()))
-          .args(recipients)
-          .stdin(Stdio::piped())
-          .stdout(Stdio::null())
-          .spawn()
-          .expect("Failed to start smtp process");
+        let mail = Mail::deserialize(&mut mail.into_bytes());
+        match mail {
+            Ok(mail)  => {
+                let recipients: Vec<String> = mail.recipients;
+                let body = mail.body;
 
-        match smtp.stdin.unwrap().write_all(body.as_slice()) {
-            Err(why) => {
-                let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
-                panic!("couldn't write to smtp stdin: {}", why.description());
+                let password = str::from_utf8(passwd);
+
+                if password.is_err() {
+                    error!("Cannot read password for account");
+                    let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                    return;
+                }
+                let smtp = Command::new(&self.client)
+                  .arg(format!("--passwordeval=echo {}", password.unwrap()))
+                  .args(recipients)
+                  .stdin(Stdio::piped())
+                  .stdout(Stdio::null())
+                  .spawn();
+
+                if smtp.is_err() {
+                  error!("Failed to start smtp process");
+                  let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                }
+
+                let mut smtp = smtp.unwrap();
+
+                match smtp.stdin.as_mut().map(|stdin| stdin.write_all(body.as_slice())) {
+                    Some(Ok(_)) => {
+                        let _ = stream.write_all(OK_SIGNAL.as_bytes());
+                        error!("Email sent to smtp");
+                    },
+                    Some(Err(why)) => {
+                        let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                        error!("Couldn't write to smtp stdin: {}", why.description());
+                    },
+                    _             => {
+                        let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                        error!("Couldn't write to smtp stdin");
+                    },
+                };
             },
-            Ok(_) => {
-                let _ = stream.write_all(OK_SIGNAL.as_bytes());
-                println!("email sent to smtp");
+            Err(why)             => {
+                let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                error!("Problem sending an email {}", why);
             },
         }
     }
@@ -55,7 +83,7 @@ impl ExternalClient {
                 }
             }
         } else {
-            panic!("failed to open a socket")
+            error!("failed to open a socket")
         }
     }
 
