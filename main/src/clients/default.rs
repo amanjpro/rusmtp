@@ -1,5 +1,5 @@
 use protocol::SMTPConnection;
-use common::{OK_SIGNAL,get_socket_path};
+use common::{ERROR_SIGNAL,OK_SIGNAL,get_socket_path};
 use mail::Mail;
 use vault::Vault;
 use account::Account;
@@ -12,31 +12,36 @@ pub struct DefaultClient {
 }
 
 impl DefaultClient {
-    fn get_mailer(&self, vault: &Vault, passwd: &[u8]) -> SMTPConnection {
+    fn get_mailer(&self, vault: &Vault, passwd: &[u8]) -> Option<SMTPConnection> {
         let account = &self.account;
 
         let label    = &account.label.to_string();
 
-        let host     = &account.host
-            .as_ref()
-            .unwrap_or_else(|| panic!("Please configure the host for {}", label));
+        if account.host.is_none() {
+            error!("Please configure the host for {}", label);
+            return None;
+        } else if account.username.is_none() {
+            error!("Please configure the username for {}", label);
+            return None;
+        } else if account.port.is_none() {
+            error!("Please configure the port for {}", label);
+            return None;
+        }
 
-        let username = account.username
-            .as_ref()
-            .unwrap_or_else(|| panic!("Please configure the username for {}", label));
+        let host     = account.host.as_ref().unwrap();
 
-        let port     = account.port
-            .as_ref()
-            .unwrap_or_else(|| panic!("Please configure the port for {}", label));
+        let username = account.username.as_ref().unwrap();
+
+        let port     = account.port.as_ref().unwrap();
 
         let mut mailer = SMTPConnection::open_connection(&host, *port);
 
         if mailer.supports_login {
-            mailer.login(&username.clone().into_bytes(),
+            mailer.login(&username.as_ref(),
                 &vault.decrypt(passwd).into_bytes());
         }
 
-        mailer
+        Some(mailer)
     }
 
     pub fn start(&self, prefix: &str, vault: &Vault) {
@@ -44,26 +49,53 @@ impl DefaultClient {
 
         let label = &account.label;
 
-        let password = account.password.clone()
-            .unwrap_or_else(|| panic!("Password is not defined for {}", &label));
+        if account.password.is_none() {
+            error!("Password is not defined for {}", &label);
+            return;
+        }
+        let password = account.password.as_ref().unwrap();
 
         if let Ok(listener) = UnixListener::bind(get_socket_path(prefix, &label)) {
             for stream in listener.incoming() {
                 match stream {
                     Ok(mut stream) => {
-                        let mut mailer = self.get_mailer(vault, &password);
+                        let mailer = self.get_mailer(vault, &password);
+                        if mailer.is_none() {
+                            error!("Cannot open a connection for account {}", &label);
+                            let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                            return;
+                        }
 
-                        let username = &account.username
-                            .as_ref()
-                            .unwrap_or_else(|| panic!("Please configure the username for {}", &label));
+                        let mut mailer = mailer.unwrap();
+
+                        if account.username.is_none() {
+                            error!("Please configure the username for {}", &label);
+                            let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                            return;
+                        }
+
+                        let username = &account.username.as_ref().unwrap();
                         let mut mail = String::new();
-                        stream.read_to_string(&mut mail).unwrap();
-                        // TODO: Failure here? should be reported back to rusmtpc
-                        let mail = Mail::deserialize(&mut mail.into_bytes()).unwrap();
-                        let recipients: Vec<&str> = mail.recipients.iter().filter(|&s| s != "--").map(|s| s.deref()).collect();
-                        let body = mail.body;
-                        mailer.send_mail(&username, &recipients, &body);
-                        let _ = stream.write_all(OK_SIGNAL.as_bytes());
+
+                        if let Err(e) = stream.read_to_string(&mut mail) {
+                            error!("Error happened while reading the incoming email {}", e);
+                            let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                        }
+
+                        let mail = Mail::deserialize(&mut mail.into_bytes());
+                        match mail {
+                            Ok(mail)  => {
+                                let recipients: Vec<&str> = mail.recipients.iter()
+                                    .filter(|&s| s != "--").map(|s| s.deref()).collect();
+                                let body = mail.body;
+                                mailer.send_mail(&username, &recipients, &body);
+                                let _ = stream.write_all(OK_SIGNAL.as_bytes());
+                            },
+                            Err(e) => {
+                                error!("Error happened while reading the incoming email {}", e);
+                                let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                            }
+                        }
                         mailer.shutdown();
 
                     }
