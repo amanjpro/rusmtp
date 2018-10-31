@@ -84,7 +84,7 @@ fn start_daemon(conf: Configuration) {
 }
 
 fn main() {
-    log4rs::init_file(format!("{}/log4rs.yaml",
+    log4rs::init_file(format!("{}/.rusmtp/rusmtpd-log4rs.yaml",
           home_dir().expect("Cannot find the home directory").display()),
           Default::default()).unwrap();
 

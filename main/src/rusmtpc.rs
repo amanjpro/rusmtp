@@ -20,7 +20,7 @@ use common::mail::*;
 use common::config::*;
 
 fn main () {
-    log4rs::init_file(format!("{}/log4rs.yaml",
+    log4rs::init_file(format!("{}/.rusmtp/rusmtpc-log4rs.yaml",
           home_dir().expect("Cannot find the home directory").display()),
           Default::default()).unwrap();
 
