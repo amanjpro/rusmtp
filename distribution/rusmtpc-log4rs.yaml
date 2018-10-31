@@ -1,0 +1,16 @@
+refresh_rate: 30 seconds
+
+appenders:
+  stdout:
+    kind: console
+
+  logfile:
+    kind: file
+    path: "/tmp/rusmtpc.log"
+    encoder:
+      pattern: "{d} - {m}{n}"
+
+root:
+  level: warn
+  appenders:
+    - logfile

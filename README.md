@@ -27,6 +27,20 @@ the connection).
 `rusmtp` is written in rust, and it can be built with `cargo`, to build it simply
 run `cargo build --release` and have the daemon built for device.
 
+## Compile time dependencies
+
+[base64 = "0.9"](https://crates.io/crates/base64)
+[dirs = "1.0"](https://crates.io/crates/dirs)
+[docopt = "1.0"](https://crates.io/crates/docopt)
+[fs2 = "0.4"](https://crates.io/crates/fs2)
+[log = "0.4"](https://crates.io/crates/log)
+[native-tls = "0.2"](https://crates.io/crates/native-tls)
+[rand = "0.5"](https://crates.io/crates/rand)
+[ring = "0.13"](https://crates.io/crates/ring)
+[rust-ini = "0.13"](https://crates.io/crates/rust-ini)
+[serde = "1.0"](https://crates.io/crates/serde)
+[serde_derive = "1.0"](https://crates.io/crates/serde_derive)
+
 ## Installation
 
 - Download the latest release

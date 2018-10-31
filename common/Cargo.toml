@@ -6,9 +6,9 @@ authors = ["amanjpro <http://www.amanj.me>"]
 [dependencies]
 serde = "1.0"
 serde_derive = "1.0"
-rust-ini = "0.10"
+rust-ini = "0.13"
 docopt = "1.0"
 dirs = "1.0"
 ring = "0.13"
 rand = "0.5"
-protocol = { path = "../protocol" }
+log = "0.4"

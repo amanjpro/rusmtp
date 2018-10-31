@@ -3,8 +3,9 @@ extern crate rand;
 extern crate dirs;
 extern crate docopt;
 extern crate ini;
-extern crate protocol;
 
+#[macro_use]
+extern crate log;
 
 use std::u64;
 
@@ -12,11 +13,17 @@ pub mod account;
 pub mod vault;
 pub mod config;
 pub mod args;
-pub mod clients;
 pub mod mail;
 
 #[macro_use]
 extern crate serde_derive;
+
+
+#[inline]
+pub fn log_and_panic<A>(msg: &str) -> A {
+    error!("{}", msg);
+    panic!("{}", msg)
+}
 
 pub fn get_lock_path(prefix: &str, account: &str) -> String {
   if prefix.is_empty() {

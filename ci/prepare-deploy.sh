@@ -14,6 +14,7 @@ archive() {
   cp distribution/rusmtprc.default "$dist/"
   cp distribution/install "$dist/"
   cp distribution/uninstall "$dist/"
+  cp distribution/log4rs.yaml "$dist/"
   cp COPYING "$dist/"
   cp README.md "$dist/"
   cp doc/rusmtpd.1 "$dist/"
