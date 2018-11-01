@@ -8,6 +8,7 @@ pub struct Args {
     pub arg_recipients: Vec<String>,
     pub flag_account: Option<String>,
     pub flag_rusmtprc: String,
+    pub flag_with_retry: Option<bool>,
     flag_help: bool,
     flag_version: bool,
 }
@@ -36,7 +37,7 @@ pub fn rusmtpc_usage(app_name: &str) -> String {
     format!("
         {}
 
-        Usage: {0} [--rusmtprc=<string>] [--account=<string>] [--] <recipients>...
+        Usage: {0} [options] [--] <recipients>...
                {0} --help
                {0} --version
 
@@ -45,6 +46,9 @@ pub fn rusmtpc_usage(app_name: &str) -> String {
                                      If none is provided, the default account would
                                      be chosen.
             --rusmtprc=<string>      Path to the rusmtprc [default: {}/.rusmtprc]
+            --with-retry             If set, {0} will retry to attempt email
+                                     until it succeeds.
+        Others:
             -h, --help               Show this help.
             -v, --version            Show the version.
         ", app_name, home_dir)
