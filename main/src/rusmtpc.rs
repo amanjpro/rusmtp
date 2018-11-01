@@ -1,3 +1,4 @@
+extern crate rand;
 extern crate fs2;
 extern crate common;
 
@@ -5,6 +6,7 @@ extern crate log4rs;
 extern crate dirs;
 
 use std::fs::File;
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::path::Path;
 use std::{thread, time};
 use std::io::{self, Read, Write};
@@ -12,6 +14,7 @@ use std::os::unix::net::UnixStream;
 use std::process::exit;
 use std::net::Shutdown;
 use std::time::Duration;
+use rand::random;
 use fs2::FileExt;
 use dirs::home_dir;
 use common::*;
@@ -55,8 +58,13 @@ fn main () {
         let _ = File::create(&flock_path);
     }
 
-    let lock_file = File::open(&flock_path).unwrap_or_else(|_|
-        log_and_panic(&format!("Cannot open flock {}", flock_path)));
+    let retry = args.flag_with_retry.unwrap_or(false);
+    let spool_root = &conf.spool_root;
+
+    let lock_file = File::open(&flock_path).unwrap_or_else(|_| {
+        enqueue(&mail, spool_root, retry);
+        log_and_panic(&format!("Cannot open flock {}", flock_path))
+    });
     let ten_millis = time::Duration::from_millis(10);
     while lock_file.lock_exclusive().is_err() {
         thread::sleep(ten_millis);
@@ -64,22 +72,48 @@ fn main () {
 
     let socket_path = get_socket_path(&conf.socket_root, account);
     let mut stream = UnixStream::connect(socket_path)
-        .unwrap_or_else(|_|
-            log_and_panic("The daemon is not running, please start it."));
+        .unwrap_or_else(|_| {
+            enqueue(&mail, spool_root, retry);
+            log_and_panic("The daemon is not running, please start it.")
+        });
     stream.write_all(mail.serialize().as_slice())
-        .unwrap_or_else(|_| log_and_panic("Cannot write email to the Unix socket"));
+        .unwrap_or_else(|_| {
+            enqueue(&mail, spool_root, retry);
+            log_and_panic("Cannot write email to the Unix socket")
+        });
     let _ = stream.shutdown(Shutdown::Write);
     let timeout = Duration::new(conf.timeout, 0);
     let _ = stream.set_read_timeout(Some(timeout));
     let mut response = Vec::new();
-    let _ = stream.read_to_end(&mut response).unwrap_or_else(|_|
-        log_and_panic("Timeout is met, please retry"));
-    let response = String::from_utf8(response).unwrap_or_else(|_|
-        log_and_panic("Cannot decode the response"));
+    let _ = stream.read_to_end(&mut response).unwrap_or_else(|_| {
+        enqueue(&mail, spool_root, retry);
+        log_and_panic("Timeout is met, please retry")
+    });
+    let response = String::from_utf8(response).unwrap_or_else(|_| {
+        enqueue(&mail, spool_root, retry);
+        log_and_panic("Cannot decode the response")
+    });
     let _ = lock_file.unlock();
     if ERROR_SIGNAL == response { exit(1); }
     else if OK_SIGNAL == response { exit(0); }
     else {
+        enqueue(&mail, spool_root, retry);
         log_and_panic(&format!("Unexpected response from the server: {}", response))
+    }
+}
+
+fn enqueue(mail: &Mail, spool_root: &str, should_retry: bool) {
+    if should_retry {
+        let account = &mail.account.as_ref().unwrap();
+        let rand: u64 = random::<u64>();;
+        let since_the_epoch = SystemTime::now().duration_since(UNIX_EPOCH)
+            .expect("Time went backwards");
+        let bytes = mail.serialize();
+        let mut email_file = File::create(
+            format!("{}/{}-{}-{}", spool_root,
+                    &account, rand, since_the_epoch.as_secs()))
+            .expect("Cannot archive the email, failing...");
+        email_file.write_all(&bytes)
+            .expect("Cannot archive the email, failing...");
     }
 }

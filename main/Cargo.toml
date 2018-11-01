@@ -16,5 +16,6 @@ fs2 = "0.4"
 log = "0.4"
 log4rs = "0.8"
 dirs = "1.0"
+rand = "0.5"
 common = { path = "../common" }
 protocol = { path = "../protocol" }
