@@ -1,5 +1,6 @@
 use ini::Ini;
 use account::Account;
+use dirs::home_dir;
 use vault::Vault;
 use log_and_panic;
 
@@ -7,6 +8,7 @@ pub struct Configuration {
     pub smtpclient: Option<String>,
     pub socket_root: String,
     pub flock_root: String,
+    pub spool_root: String,
     pub timeout: u64,
     pub accounts: Vec<Account>,
 }
@@ -31,6 +33,16 @@ pub fn read_config(rc_path: &str) -> Configuration {
         warn!("No configuration was found for flock-root-path, \
               using the default value");
         "".to_string()
+    });
+
+    let home_dir = home_dir().expect("Cannot find the home directory").display().to_string();
+    let defualt_spool = format!("{}/.rusmtp/spool", home_dir);
+    let spool_root = app.and_then(|app| {
+        app.get("spool-root-path").map(|s| s.to_string())
+    }).unwrap_or_else(|| {
+        warn!("No configuration was found for spool-root-path, \
+              using the default value (i.e. {})", defualt_spool);
+        defualt_spool
     });
 
     let smtp = conf.section(Some("Daemon".to_owned())).and_then(|section| {
@@ -113,8 +125,9 @@ pub fn read_config(rc_path: &str) -> Configuration {
 
     Configuration {
         smtpclient: smtp,
-        flock_root,
         socket_root,
+        flock_root,
+        spool_root,
         timeout,
         accounts,
     }
