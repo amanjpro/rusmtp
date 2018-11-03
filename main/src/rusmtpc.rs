@@ -1,3 +1,10 @@
+pub mod clients;
+
+extern crate protocol;
+
+#[macro_use]
+extern crate log;
+
 extern crate rand;
 extern crate fs2;
 extern crate common;
@@ -10,13 +17,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use std::path::Path;
 use std::{thread, time};
 use std::io::{self, Read, Write};
-use std::os::unix::net::UnixStream;
-use std::process::exit;
-use std::net::Shutdown;
-use std::time::Duration;
 use rand::random;
 use fs2::FileExt;
 use dirs::home_dir;
+use clients::send_to_daemon;
 use common::*;
 use common::args::*;
 use common::mail::*;
@@ -70,36 +74,12 @@ fn main () {
         thread::sleep(ten_millis);
     }
 
-    let socket_path = get_socket_path(&conf.socket_root, account);
-    let mut stream = UnixStream::connect(socket_path)
-        .unwrap_or_else(|_| {
-            enqueue(&mail, spool_root, retry);
-            log_and_panic("The daemon is not running, please start it.")
-        });
-    stream.write_all(mail.serialize().as_slice())
-        .unwrap_or_else(|_| {
-            enqueue(&mail, spool_root, retry);
-            log_and_panic("Cannot write email to the Unix socket")
-        });
-    let _ = stream.shutdown(Shutdown::Write);
-    let timeout = Duration::new(conf.timeout, 0);
-    let _ = stream.set_read_timeout(Some(timeout));
-    let mut response = Vec::new();
-    let _ = stream.read_to_end(&mut response).unwrap_or_else(|_| {
+    let res = send_to_daemon(&mail, &conf.socket_root, conf.timeout, account);
+    if res.is_err() {
         enqueue(&mail, spool_root, retry);
-        log_and_panic("Timeout is met, please retry")
-    });
-    let response = String::from_utf8(response).unwrap_or_else(|_| {
-        enqueue(&mail, spool_root, retry);
-        log_and_panic("Cannot decode the response")
-    });
-    let _ = lock_file.unlock();
-    if ERROR_SIGNAL == response { exit(1); }
-    else if OK_SIGNAL == response { exit(0); }
-    else {
-        enqueue(&mail, spool_root, retry);
-        log_and_panic(&format!("Unexpected response from the server: {}", response))
+        let _: String = log_and_panic(&res.unwrap_err());
     }
+    let _ = lock_file.unlock();
 }
 
 fn enqueue(mail: &Mail, spool_root: &str, should_retry: bool) {
