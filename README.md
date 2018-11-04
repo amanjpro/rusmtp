@@ -27,7 +27,7 @@ the connection).
 `rusmtp` is written in rust, and it can be built with `cargo`, to build it simply
 run `cargo build --release` and have the daemon built for the host architecture.
 
-## Compile time dependencies
+## Direct compile time dependencies
 
 [base64 = "0.9"](https://crates.io/crates/base64)
 
@@ -38,6 +38,8 @@ run `cargo build --release` and have the daemon built for the host architecture.
 [fs2 = "0.4"](https://crates.io/crates/fs2)
 
 [log = "0.4"](https://crates.io/crates/log)
+
+[log4rs = "0.8"](https://crates.io/crates/log4rs)
 
 [native-tls = "0.2"](https://crates.io/crates/native-tls)
 
@@ -50,6 +52,19 @@ run `cargo build --release` and have the daemon built for the host architecture.
 [serde = "1.0"](https://crates.io/crates/serde)
 
 [serde_derive = "1.0"](https://crates.io/crates/serde_derive)
+
+*One way to recompute the above list, please run the following command chain*
+
+```
+   for build in */Cargo.toml; do \
+     cat $build |\
+     rq -T -t 'at "[dependencies]"'; \
+   done |\
+   grep -v '^path = "../' |\
+   grep -v '^\[' |\
+   grep -v '^$' |\
+   sort -u
+```
 
 ## Installation
 
