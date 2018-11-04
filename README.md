@@ -29,7 +29,7 @@ run `cargo build --release` and have the daemon built for the host architecture.
 
 ## Direct compile time dependencies
 
-- [base64 = "0.9"](https://crates.io/crates/base64)
+- [base64 = "0.10"](https://crates.io/crates/base64)
 - [dirs = "1.0"](https://crates.io/crates/dirs)
 - [docopt = "1.0"](https://crates.io/crates/docopt)
 - [fs2 = "0.4"](https://crates.io/crates/fs2)
