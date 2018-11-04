@@ -88,12 +88,11 @@ fn enqueue(mail: &Mail, spool_root: &str, should_retry: bool) {
         let rand: u64 = random::<u64>();;
         let since_the_epoch = SystemTime::now().duration_since(UNIX_EPOCH)
             .expect("Time went backwards");
-        let bytes = mail.serialize();
         let mut email_file = File::create(
             format!("{}/{}-{}-{}", spool_root,
                     &account, rand, since_the_epoch.as_secs()))
             .expect("Cannot archive the email, failing...");
-        email_file.write_all(&bytes)
+        email_file.write_all(mail.serialize().as_slice())
             .expect("Cannot archive the email, failing...");
     }
 }

@@ -52,9 +52,8 @@ fn retry_logic(spool_path: &str, flock_root: &str, socket_root: &str,
                         // to the emails of this account.
                         lock_file.lock_exclusive()?;
                         let file = &mut File::open(path.clone())?;
-                        let mut contents = String::new();
-                        file.read_to_string(&mut contents)?;
-                        let mut contents = contents.into_bytes();
+                        let mut contents = Vec::new();
+                        file.read_to_end(&mut contents)?;
                         if let Ok(mail) = Mail::deserialize(&mut contents) {
                             if let Ok(_) = send_to_daemon(&mail, &socket_root, timeout, account) {
                                 remove_file(path)?;
@@ -72,9 +71,11 @@ fn retry_logic(spool_path: &str, flock_root: &str, socket_root: &str,
 fn start_resender(spool_path: String, flock_root: String,
                   socket_root: String, timeout: u64) -> JoinHandle<()> {
     thread::spawn(move || {
-        let _ = retry_logic(&spool_path, &flock_root, &socket_root, timeout);
-        let one_minute = time::Duration::new(60, 0);
-        thread::sleep(one_minute);
+        loop {
+            let res = retry_logic(&spool_path, &flock_root, &socket_root, timeout);
+            let one_minute = time::Duration::new(60, 0);
+            thread::sleep(one_minute);
+        }
     })
 }
 
