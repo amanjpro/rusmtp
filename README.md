@@ -29,29 +29,18 @@ run `cargo build --release` and have the daemon built for the host architecture.
 
 ## Direct compile time dependencies
 
-[base64 = "0.9"](https://crates.io/crates/base64)
-
-[dirs = "1.0"](https://crates.io/crates/dirs)
-
-[docopt = "1.0"](https://crates.io/crates/docopt)
-
-[fs2 = "0.4"](https://crates.io/crates/fs2)
-
-[log = "0.4"](https://crates.io/crates/log)
-
-[log4rs = "0.8"](https://crates.io/crates/log4rs)
-
-[native-tls = "0.2"](https://crates.io/crates/native-tls)
-
-[rand = "0.5"](https://crates.io/crates/rand)
-
-[ring = "0.13"](https://crates.io/crates/ring)
-
-[rust-ini = "0.13"](https://crates.io/crates/rust-ini)
-
-[serde = "1.0"](https://crates.io/crates/serde)
-
-[serde_derive = "1.0"](https://crates.io/crates/serde_derive)
+- [base64 = "0.9"](https://crates.io/crates/base64)
+- [dirs = "1.0"](https://crates.io/crates/dirs)
+- [docopt = "1.0"](https://crates.io/crates/docopt)
+- [fs2 = "0.4"](https://crates.io/crates/fs2)
+- [log = "0.4"](https://crates.io/crates/log)
+- [log4rs = "0.8"](https://crates.io/crates/log4rs)
+- [native-tls = "0.2"](https://crates.io/crates/native-tls)
+- [rand = "0.5"](https://crates.io/crates/rand)
+- [ring = "0.13"](https://crates.io/crates/ring)
+- [rust-ini = "0.13"](https://crates.io/crates/rust-ini)
+- [serde = "1.0"](https://crates.io/crates/serde)
+- [serde_derive = "1.0"](https://crates.io/crates/serde_derive)
 
 *One way to recompute the above list, please run the following command chain*
 
