@@ -25,7 +25,7 @@ the connection).
 ## Building from the source
 
 `rusmtp` is written in rust, and it can be built with `cargo`, to build it simply
-run `cargo build --release` and have the daemon built for device.
+run `cargo build --release` and have the daemon built for the host architecture.
 
 ## Compile time dependencies
 
