@@ -4,10 +4,10 @@ set -o errexit -o nounset -o pipefail
 
 cp rusmtpd /usr/local/bin/rusmtpd
 cp rusmtpc /usr/local/bin/rusmtpc
-test -z "$HOME"/.rusmtprc || cp rusmtprc.default "$HOME"/.rusmtprc
+test -z "$HOME"/.rusmtprc && cp rusmtprc.default "$HOME"/.rusmtprc
 man_path="/usr/share/man/man1/"
 cp rusmtpd.1 "$man_path/"
 cp rusmtpc.1 "$man_path/"
 mkdir -p "$HOME"/.rusmtp
-test -z "$HOME"/.rusmtp/rusmtpc-log4rs.yaml || cp rusmtpc-log4rs.yaml "$HOME"/.rusmtp/
-test -z "$HOME"/.rusmtp/rusmtpd-log4rs.yaml || cp rusmtpd-log4rs.yaml "$HOME"/.rusmtp/
+test -z "$HOME"/.rusmtp/rusmtpc-log4rs.yaml && cp rusmtpc-log4rs.yaml "$HOME"/.rusmtp/
+test -z "$HOME"/.rusmtp/rusmtpd-log4rs.yaml && cp rusmtpd-log4rs.yaml "$HOME"/.rusmtp/
