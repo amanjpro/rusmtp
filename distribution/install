@@ -9,5 +9,5 @@ man_path="/usr/share/man/man1/"
 cp rusmtpd.1 "$man_path/"
 cp rusmtpc.1 "$man_path/"
 mkdir -p "$HOME"/.rusmtp
-text -z "$HOME"/.rusmtp/rusmtpc-log4rs.yaml || cp log4rs.yaml "$HOME"/.rusmtp/
-text -z "$HOME"/.rusmtp/rusmtpd-log4rs.yaml || cp log4rs.yaml "$HOME"/.rusmtp/
+test -z "$HOME"/.rusmtp/rusmtpc-log4rs.yaml || cp rusmtpc-log4rs.yaml "$HOME"/.rusmtp/
+test -z "$HOME"/.rusmtp/rusmtpd-log4rs.yaml || cp rusmtpd-log4rs.yaml "$HOME"/.rusmtp/
