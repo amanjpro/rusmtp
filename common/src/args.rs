@@ -46,8 +46,8 @@ pub fn rusmtpc_usage(app_name: &str) -> String {
                                      If none is provided, the default account would
                                      be chosen.
             --rusmtprc=<string>      Path to the rusmtprc [default: {}/.rusmtprc]
-            --with-retry             If set, {0} will retry to attempt email
-                                     until it succeeds.
+            --with-retry             If set, {0} will retry to attempt sending
+                                     email until it succeeds.
         Others:
             -h, --help               Show this help.
             -v, --version            Show the version.
