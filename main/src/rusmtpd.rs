@@ -9,7 +9,7 @@ extern crate log;
 extern crate dirs;
 
 use std::process::{Command, Stdio};
-use std::fs::File;
+use std::fs::{remove_file, File};
 use std::io::{Read, Error};
 use std::path::Path;
 use dirs::home_dir;
@@ -51,12 +51,14 @@ fn retry_logic(spool_path: &str, flock_root: &str, socket_root: &str,
                         // which is only available if there is no active writes
                         // to the emails of this account.
                         lock_file.lock_exclusive()?;
-                        let file = &mut File::open(path)?;
+                        let file = &mut File::open(path.clone())?;
                         let mut contents = String::new();
                         file.read_to_string(&mut contents)?;
                         let mut contents = contents.into_bytes();
                         if let Ok(mail) = Mail::deserialize(&mut contents) {
-                            let _ = send_to_daemon(&mail, &socket_root, timeout, account);
+                            if let Ok(_) = send_to_daemon(&mail, &socket_root, timeout, account) {
+                                remove_file(path)?;
+                            }
                         }
                         let _ = lock_file.unlock();
                     }
