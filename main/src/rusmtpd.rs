@@ -1,20 +1,26 @@
+pub mod clients;
+
 extern crate common;
 extern crate protocol;
+extern crate fs2;
 
 #[macro_use]
 extern crate log;
 extern crate dirs;
 
-pub mod clients;
-
 use std::process::{Command, Stdio};
-use std::io::Read;
+use std::fs::File;
+use std::io::{Read, Error};
+use std::path::Path;
 use dirs::home_dir;
-use std::{thread,fs};
+use fs2::FileExt;
+use std::{thread, time, fs, thread::JoinHandle};
 use common::*;
 use common::args::*;
+use common::mail::*;
 use common::config::*;
 use common::account::*;
+use clients::*;
 use clients::external::*;
 use clients::default::*;
 
@@ -24,7 +30,53 @@ fn print_welcome_message() {
     println!("Ready to send emails");
 }
 
-fn start_daemon(conf: Configuration) {
+fn retry_logic(spool_path: &str, flock_root: &str, socket_root: &str,
+               timeout: u64) -> Result<(), Error> {
+    let spool_dir = Path::new(&spool_path);
+    if spool_dir.is_dir() {
+        let spool_dir = fs::read_dir(spool_dir)?;
+        for entry in spool_dir {
+            let path = entry?.path();
+            if path.is_file() {
+                if let Some(path_string) =
+                    path.clone().file_name().and_then(|f| f.to_str()) {
+                    let v: Vec<&str> = path_string.split('-').collect();
+                    if v.len() == 3 {
+                        let account = v[0];
+                        let flock_path = get_lock_path(&flock_root, account);
+                        let lock_file = File::open(&flock_path)?;
+                        // It is safe to assume that everything is written
+                        // for this account contains the complete email message,
+                        // because this thread already acquires the flock,
+                        // which is only available if there is no active writes
+                        // to the emails of this account.
+                        lock_file.lock_exclusive()?;
+                        let file = &mut File::open(path)?;
+                        let mut contents = String::new();
+                        file.read_to_string(&mut contents)?;
+                        let mut contents = contents.into_bytes();
+                        if let Ok(mail) = Mail::deserialize(&mut contents) {
+                            let _ = send_to_daemon(&mail, &socket_root, timeout, account);
+                        }
+                        let _ = lock_file.unlock();
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn start_resender(spool_path: String, flock_root: String,
+                  socket_root: String, timeout: u64) -> JoinHandle<()> {
+    thread::spawn(move || {
+        let _ = retry_logic(&spool_path, &flock_root, &socket_root, timeout);
+        let one_minute = time::Duration::new(60, 0);
+        thread::sleep(one_minute);
+    })
+}
+
+fn start_daemon(conf: Configuration) -> Vec<JoinHandle<()>> {
     let mut children = vec![];
     for account in conf.accounts {
         let client = conf.smtpclient.clone();
@@ -77,10 +129,7 @@ fn start_daemon(conf: Configuration) {
         }));
     }
 
-    for child in children {
-        // Wait for the thread to finish. Returns a result.
-        let _ = child.join();
-    }
+    children
 }
 
 fn main() {
@@ -94,5 +143,14 @@ fn main() {
     info!("rusmtpd started");
 
     print_welcome_message();
-    start_daemon(conf);
+    let resender = start_resender(conf.spool_root.clone(),
+                                  conf.flock_root.clone(),
+                                  conf.socket_root.clone(), conf.timeout);
+    let senders = start_daemon(conf);
+
+    let _ = resender.join();
+    for sender in senders {
+        // Wait for the thread to finish. Returns a result.
+        let _ = sender.join();
+    }
 }

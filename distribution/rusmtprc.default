@@ -1,6 +1,8 @@
 ; This section contains the configurations for the application
 ; i.e. both daemon and client
 ; [App]
+; Where should the failed emails be stored, to be queued for retry
+; spool-root-path=~/.rusmtp/spool
 ; The root path of socket files, if none is provided the directory
 ; of where executables are installed is assumed
 ; socket is a channel per email account between the daemon and the

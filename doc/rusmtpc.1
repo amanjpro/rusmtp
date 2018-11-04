@@ -6,6 +6,7 @@ rusmtpc \- An SMTP client to send emails via rusmtpd.
 .B rusmtpc
 [\fB\-\-rusmtprc=PATH_TO_SMTPDRC]
 [\fB\-\-account=ACCOUNT_NAME]
+[\fB\-\-with\-retry]
 [\-\-]
 .IR recipients ...
 
@@ -23,6 +24,12 @@ example configuration file is already installed in $HOME/.rusmtprc.
 .BR \-\-account=\fIACCOUNT_NAME\fR
 The account on which the email should be sent. If none is provided, the
 default account would.
+.TP
+.BR \-\-with\-retry
+If set, rusmtpc will retry to attempt sending email until it succeeds, this
+particularly useful for cron emails. But if the client is used with email
+clients such as NeoMutt, this option should not be passed, to avoid double
+sending the same email.
 .TP
 .BR \-\-
 A \-\- signals the end of options and disables further option
