@@ -55,7 +55,7 @@ fn retry_logic(spool_path: &str, flock_root: &str, socket_root: &str,
                         let mut contents = Vec::new();
                         file.read_to_end(&mut contents)?;
                         if let Ok(mail) = Mail::deserialize(&mut contents) {
-                            if let Ok(_) = send_to_daemon(&mail, &socket_root, timeout, account) {
+                            if send_to_daemon(&mail, &socket_root, timeout, account).is_ok() {
                                 remove_file(path)?;
                             }
                         }
