@@ -72,7 +72,7 @@ fn start_resender(spool_path: String, flock_root: String,
                   socket_root: String, timeout: u64) -> JoinHandle<()> {
     thread::spawn(move || {
         loop {
-            let res = retry_logic(&spool_path, &flock_root, &socket_root, timeout);
+            let _ = retry_logic(&spool_path, &flock_root, &socket_root, timeout);
             let one_minute = time::Duration::new(60, 0);
             thread::sleep(one_minute);
         }
