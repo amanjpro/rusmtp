@@ -13,13 +13,13 @@ pub struct ExternalClient {
 
 impl ExternalClient {
     fn send_mail(&self, mut stream: UnixStream, passwd: &[u8]) {
-        let mut mail = String::new();
-        if let Err(e) = stream.read_to_string(&mut mail) {
+        let mut mail = Vec::new();
+        if let Err(e) = stream.read_to_end(&mut mail) {
             error!("Error happened while reading the incoming email {}", e);
             let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
         }
 
-        let mail = Mail::deserialize(&mut mail.into_bytes());
+        let mail = Mail::deserialize(&mut mail);
         match mail {
             Ok(mail)  => {
                 let recipients: Vec<String> = mail.recipients;

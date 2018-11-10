@@ -75,14 +75,14 @@ impl DefaultClient {
                         }
 
                         let username = &account.username.as_ref().unwrap();
-                        let mut mail = String::new();
+                        let mut mail = Vec::new();
 
-                        if let Err(e) = stream.read_to_string(&mut mail) {
+                        if let Err(e) = stream.read_to_end(&mut mail) {
                             error!("Error happened while reading the incoming email {}", e);
                             let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
                         }
 
-                        let mail = Mail::deserialize(&mut mail.into_bytes());
+                        let mail = Mail::deserialize(&mut mail);
                         match mail {
                             Ok(mail)  => {
                                 let recipients: Vec<&str> = mail.recipients.iter()
