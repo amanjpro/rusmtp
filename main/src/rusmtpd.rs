@@ -8,6 +8,7 @@ extern crate fs2;
 extern crate log;
 extern crate dirs;
 
+use std::alloc::System;
 use std::process::{Command, Stdio};
 use std::fs::{remove_file, File};
 use std::io::{Read, Error};
@@ -24,6 +25,8 @@ use clients::*;
 use clients::external::*;
 use clients::default::*;
 
+#[global_allocator]
+static GLOBAL: System = System;
 
 fn print_welcome_message() {
     println!("rusmtpd daemon started...");

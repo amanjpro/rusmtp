@@ -12,6 +12,7 @@ extern crate common;
 extern crate log4rs;
 extern crate dirs;
 
+use std::alloc::System;
 use std::fs::File;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::path::Path;
@@ -25,6 +26,9 @@ use common::*;
 use common::args::*;
 use common::mail::*;
 use common::config::*;
+
+#[global_allocator]
+static GLOBAL: System = System;
 
 fn main () {
     log4rs::init_file(format!("{}/.rusmtp/rusmtpc-log4rs.yaml",
