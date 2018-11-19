@@ -26,6 +26,7 @@ the connection).
 
 `rusmtp` is written in rust, and it can be built with `cargo`, to build it simply
 run `cargo build --release` and have the daemon built for the host architecture.
+Minimum supported version of rust is 1.28.0.
 
 ## Direct compile time dependencies
 
