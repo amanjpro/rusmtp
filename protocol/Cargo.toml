@@ -10,4 +10,3 @@ vendored = ["native-tls/vendored"]
 log = "0.4"
 native-tls = "0.2"
 base64 = "0.10"
-common = { path = "../common" }
