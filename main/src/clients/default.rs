@@ -34,11 +34,21 @@ impl DefaultClient {
 
         let port     = account.port.as_ref().unwrap();
 
-        let mut mailer = SMTPConnection::open_connection(&host, *port);
+        let mut mailer = match SMTPConnection::open_connection(&host, *port) {
+            Ok(mailer) => mailer,
+            Err(error) => {
+                error!("{}", error);
+                return None;
+            }
+        };
 
         if mailer.supports_login {
-            mailer.login(&username.as_ref(),
-                &vault.decrypt(passwd).into_bytes());
+            if let Err(error) = mailer.login(&username.as_ref(),
+                &vault.decrypt(passwd).into_bytes()) {
+                error!("{}", error);
+                return None;
+            };
+
         }
 
         Some(mailer)
@@ -88,8 +98,12 @@ impl DefaultClient {
                                 let recipients: Vec<&str> = mail.recipients.iter()
                                     .filter(|&s| s != "--").map(|s| s.deref()).collect();
                                 let body = mail.body;
-                                mailer.send_mail(&username, &recipients, &body);
-                                let _ = stream.write_all(OK_SIGNAL.as_bytes());
+                                if let Err(error) = mailer.send_mail(&username, &recipients, &body) {
+                                    error!("{}", error);
+                                    let _ = stream.write_all(ERROR_SIGNAL.as_bytes());
+                                } else {
+                                    let _ = stream.write_all(OK_SIGNAL.as_bytes());
+                                }
                             },
                             Err(e) => {
                                 error!("Error happened while reading the incoming email {}", e);
