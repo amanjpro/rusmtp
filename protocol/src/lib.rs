@@ -46,13 +46,13 @@ pub trait Raven: Stream {
             debug!("Shaking hands with the ESMTP server");
             self.send_or_err(
                 &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
-                &is_ok,
+                &|res| is_ok(res, &"250"),
                 &format!("SMTP Server {} does not support ESMTP", host))
         } else {
             debug!("Shaking hands with the SMTP server");
             self.send_or_err(
                 &format!("{} rusmtp.amanj.me\n", HELO).as_bytes(),
-                &is_ok,
+                &|res| is_ok(res, &"250"),
                 &format!("SMTP Server {} does not support SMTP", host))
         }
     }
@@ -76,7 +76,7 @@ pub trait Raven: Stream {
                 debug!("Checking if TLS is supported");
                 let _ = self.send_or_err(
                     &format!("{} rusmtp.amanj.me\n", STARTTLS).as_bytes(),
-                    &is_ok,
+                    &|res| is_ok(res, &"250"),
                     "Cannot start a TLS connection")?;
 
                 debug!("Shaking hands with the server again, but this time over TLS");
@@ -111,30 +111,30 @@ pub trait Raven: Stream {
        debug!("{}", &response);
        self.send(&encode(&passwd).as_bytes());
        self.send_or_err(b"\n",
-           &|response| response.starts_with("235"),
+           &|res| is_ok(res, &"235"),
            "Invalid username or password")
     }
 
     fn send_mail(&mut self, from: &str, recipients: &[&str], body: &[u8]) -> Result<String, String> {
        let _ = self.send_or_err(
           format!("{} {}:<{}>\r\n", MAIL, FROM, from).as_bytes(),
-           &|response| response.starts_with("250"),
+           &|res| is_ok(res, &"250"),
            &format!("Cannot send email from {}", from))?;
 
        for recipient in recipients.iter() {
           let _ = self.send_or_err(
               format!("{} {}:<{}>\r\n", RCPT, TO, recipient).as_bytes(),
-              &|response| response.starts_with("250"),
+              &|res| is_ok(res, &"250"),
               &format!("Cannot send email to {}", recipient))?;
        }
 
        let _ = self.send_or_err(format!("{}\r\n", DATA).as_bytes(),
-              &|response| response.starts_with("354"),
+              &|res| is_ok(res, &"354"),
               "Cannot start sending email")?;
 
        self.send(body);
        self.send_or_err(b"\r\n.\r\n",
-           &|response| response.starts_with("250"),
+           &|res| is_ok(res, &"250"),
            "Failed to send email")
     }
 
@@ -230,6 +230,6 @@ fn tokenize(response: &str) -> Vec<&str> {
     response.split(&|ch| ch == ' ' || ch == '-').collect::<Vec<&str>>()
 }
 
-fn is_ok(response: &str) -> bool {
-    tokenize(response).get(0) == Some(&"250")
+fn is_ok(response: &str, code: &str) -> bool {
+    tokenize(response).get(0) == Some(&code)
 }
