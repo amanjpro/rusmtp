@@ -41,43 +41,57 @@ pub trait Raven: Stream {
 
     fn create_connection(host: &str, port: u16) -> Result<Self, String>;
 
+    fn send_hello(&mut self, host: &str, is_esmtp: bool) -> Result<String, String> {
+        if is_esmtp {
+            debug!("Shaking hands with the ESMTP server");
+            self.send_or_err(
+                &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
+                &is_ok,
+                &format!("SMTP Server {} does not support ESMTP", host))
+        } else {
+            debug!("Shaking hands with the SMTP server");
+            self.send_or_err(
+                &format!("{} rusmtp.amanj.me\n", HELO).as_bytes(),
+                &is_ok,
+                &format!("SMTP Server {} does not support SMTP", host))
+        }
+    }
+
     fn hand_shake(&mut self, host: &str) -> Result<Vec<Authentication>, String> {
         let response = self.recieve()?;
         debug!("{}", &response);
 
         debug!("Checking the presence of ESMTP protocol");
-        true_or_err(
-            response.starts_with("220") && response.contains("ESMTP"),
-            &format!("SMTP Server {} is not accepting clients", host))?;
-
-        debug!("Shaking hands with the ESMTP server");
-        let response = self.send_or_err(
-            &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
-            &|response| response.starts_with("250"),
-            &format!("SMTP Server {} does not support ESMTP", host))?;
-
-        if response.contains(STARTTLS) {
-            debug!("Checking if TLS is supported");
-            let _ = self.send_or_err(
-                &format!("{} rusmtp.amanj.me\n", STARTTLS).as_bytes(),
-                &|response| response.starts_with("250"),
-                "Cannot start a TLS connection")?;
-
-            debug!("Shaking hands with the ESMTP server again, but this time over TLS");
-            let _ = self.send_or_err(
-                &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
-                &|response| response.starts_with("250"),
-                &format!("SMTP Server {} does not support ESMTP", host))?;
-        }
-
+        let tokens = tokenize(&response);
         let mut auths: Vec<Authentication> = Vec::new();
 
-        if response.contains(LOGIN) {
-            auths.push(Authentication::Login);
-        }
+        if tokens.get(0) == Some(&"220") {
 
-        if response.contains(XOAUTH2) {
-            auths.push(Authentication::XAuth2);
+            let is_esmtp = tokens.contains(&"ESMTP");
+            let response = self.send_hello(host, is_esmtp)?;
+
+            let tokens = tokenize(&response);
+
+            if tokens.contains(&STARTTLS) {
+                debug!("Checking if TLS is supported");
+                let _ = self.send_or_err(
+                    &format!("{} rusmtp.amanj.me\n", STARTTLS).as_bytes(),
+                    &is_ok,
+                    "Cannot start a TLS connection")?;
+
+                debug!("Shaking hands with the server again, but this time over TLS");
+                let _ = self.send_hello(host, is_esmtp)?;
+            }
+
+            if tokens.contains(&LOGIN) {
+                auths.push(Authentication::Login);
+            }
+
+            if tokens.contains(&XOAUTH2) {
+                auths.push(Authentication::XAuth2);
+            }
+        } else {
+            return Err(format!("Bad reply from server, {}", response))
         }
 
         if response.is_empty() {
@@ -210,4 +224,12 @@ fn get_ip_address(host: &str) -> Result<Vec<IpAddr>, String> {
     } else {
         Ok(res.unwrap())
     }
+}
+
+fn tokenize(response: &str) -> Vec<&str> {
+    response.split(&|ch| ch == ' ' || ch == '-').collect::<Vec<&str>>()
+}
+
+fn is_ok(response: &str) -> bool {
+    tokenize(response).get(0) == Some(&"250")
 }
