@@ -9,4 +9,5 @@ vendored = ["native-tls/vendored"]
 [dependencies]
 log = "0.4"
 native-tls = "0.2"
+regex = "1"
 base64 = "0.10"

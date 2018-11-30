@@ -2,12 +2,14 @@ pub mod verbs;
 
 extern crate native_tls;
 extern crate base64;
+extern crate regex;
 
 #[macro_use]
 extern crate log;
 
 use verbs::*;
 use base64::encode;
+use regex::Regex;
 use std::io::prelude::*;
 use std::net::Shutdown;
 use native_tls::{TlsConnector, TlsStream};
@@ -18,7 +20,7 @@ pub trait Stream: Read + Write + Sized {
     fn close(&mut self);
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum Authentication {
     None,
     Login,
@@ -41,20 +43,12 @@ pub trait Raven: Stream {
 
     fn create_connection(host: &str, port: u16) -> Result<Self, String>;
 
-    fn send_hello(&mut self, host: &str, is_esmtp: bool) -> Result<String, String> {
-        if is_esmtp {
-            debug!("Shaking hands with the ESMTP server");
-            self.send_or_err(
-                &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
-                &|res| is_ok(res, &"250"),
-                &format!("SMTP Server {} does not support ESMTP", host))
-        } else {
-            debug!("Shaking hands with the SMTP server");
-            self.send_or_err(
-                &format!("{} rusmtp.amanj.me\n", HELO).as_bytes(),
-                &|res| is_ok(res, &"250"),
-                &format!("SMTP Server {} does not support SMTP", host))
-        }
+    fn send_hello(&mut self, host: &str) -> Result<String, String> {
+        debug!("Shaking hands with the ESMTP server");
+        self.send_or_err(
+            &format!("{} rusmtp.amanj.me\n", EHLO).as_bytes(),
+            &|res| is_ok(res, &"250"),
+            &format!("SMTP Server {} does not support ESMTP", host))
     }
 
     fn hand_shake(&mut self, host: &str) -> Result<Vec<Authentication>, String> {
@@ -67,8 +61,7 @@ pub trait Raven: Stream {
 
         if tokens.get(0) == Some(&"220") {
 
-            let is_esmtp = tokens.contains(&"ESMTP");
-            let response = self.send_hello(host, is_esmtp)?;
+            let response = self.send_hello(host)?;
 
             let tokens = tokenize(&response);
 
@@ -80,9 +73,10 @@ pub trait Raven: Stream {
                     "Cannot start a TLS connection")?;
 
                 debug!("Shaking hands with the server again, but this time over TLS");
-                let _ = self.send_hello(host, is_esmtp)?;
+                let _ = self.send_hello(host)?;
             }
 
+            debug!("here is the response: {}", response);
             if tokens.contains(&LOGIN) {
                 auths.push(Authentication::Login);
             }
@@ -94,9 +88,11 @@ pub trait Raven: Stream {
             return Err(format!("Bad reply from server, {}", response))
         }
 
-        if response.is_empty() {
+        if auths.is_empty() {
             auths.push(Authentication::None)
         }
+
+        debug!("{:?}", auths);
 
         Ok(auths)
     }
@@ -151,14 +147,29 @@ pub trait Raven: Stream {
     }
 
     fn recieve(&mut self) -> Result<String, String> {
-        let mut response = [0; 4096];
-        let _ = self.read(&mut response);
-        let res = std::str::from_utf8(&response);
-        if res.is_err() {
-            Err("Cannot decode the message".to_string())
+        let mut aggregated = String::new();
+        let re = Regex::new(r"(?m)^\d{3} .*$");
+        let re = if re.is_err() {
+            return Err("Cannot decode the message".to_string())
         } else {
-            Ok(res.unwrap().to_string())
+            re.unwrap()
+        };
+        loop {
+            let mut response = [0; 4096];
+            let _ = self.read(&mut response);
+            let res = std::str::from_utf8(&response);
+            let res =
+                if res.is_err() {
+                    return Err("Cannot decode the message".to_string())
+                } else {
+                    res.unwrap()
+                };
+            aggregated = aggregated + res;
+            if re.is_match(&aggregated) {
+                break;
+            }
         }
+        Ok(aggregated)
     }
 
     fn send(&mut self, msg: &[u8]) {
