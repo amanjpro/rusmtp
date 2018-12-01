@@ -100,6 +100,7 @@ fn start_daemon(conf: Configuration) -> Vec<JoinHandle<()>> {
                     let mut passwd = String::new();
                     let _ = child_stdout.read_to_string(&mut passwd);
 
+                    let mut passwd = passwd.trim().to_string();
 
                     // close the socket, if it exists
                     let _ = fs::remove_file(get_socket_path(&socket_root, &account.label));
