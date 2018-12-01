@@ -164,7 +164,7 @@ pub trait Raven: Stream {
                 } else {
                     res.unwrap()
                 };
-            aggregated = aggregated + res;
+            aggregated += res;
             if re.is_match(&aggregated) {
                 break;
             }
