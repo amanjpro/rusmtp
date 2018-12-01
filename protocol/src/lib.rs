@@ -7,6 +7,9 @@ extern crate regex;
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate lazy_static;
+
 use verbs::*;
 use base64::encode;
 use regex::Regex;
@@ -148,12 +151,6 @@ pub trait Raven: Stream {
 
     fn recieve(&mut self) -> Result<String, String> {
         let mut aggregated = String::new();
-        let re = Regex::new(r"(?m)^\d{3} .*$");
-        let re = if re.is_err() {
-            return Err("Cannot decode the message".to_string())
-        } else {
-            re.unwrap()
-        };
         loop {
             let mut response = [0; 4096];
             let _ = self.read(&mut response);
@@ -235,6 +232,10 @@ fn get_ip_address(host: &str) -> Result<Vec<IpAddr>, String> {
     } else {
         Ok(res.unwrap())
     }
+}
+
+lazy_static! {
+    static ref re: Regex = Regex::new(r"(?m)^\d{3} .*$").unwrap();
 }
 
 fn tokenize(response: &str) -> Vec<&str> {
