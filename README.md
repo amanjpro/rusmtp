@@ -42,6 +42,8 @@ Minimum supported version of rust is 1.28.0.
 - [rust-ini = "0.13"](https://crates.io/crates/rust-ini)
 - [serde = "1.0"](https://crates.io/crates/serde)
 - [serde_derive = "1.0"](https://crates.io/crates/serde_derive)
+- [lazy_static = "1.2"](https://crates.io/crates/lazy_static)
+- [regex = "1"](https://crates.io/crates/regex)
 
 *One way to recompute the above list, please run the following command chain*
 
