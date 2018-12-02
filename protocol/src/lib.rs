@@ -13,9 +13,10 @@ extern crate lazy_static;
 use verbs::*;
 use base64::encode;
 use regex::Regex;
+use std::fs::File;
 use std::io::prelude::*;
 use std::net::Shutdown;
-use native_tls::{TlsConnector, TlsStream};
+use native_tls::{TlsConnector, TlsStream, Certificate};
 use std::net::{TcpStream, ToSocketAddrs, IpAddr};
 
 
@@ -44,7 +45,7 @@ impl Stream for TcpStream {
 
 pub trait Raven: Stream {
 
-    fn create_connection(host: &str, port: u16) -> Result<Self, String>;
+    fn create_connection(host: &str, port: u16, cert_root: Option<String>) -> Result<Self, String>;
 
     fn send_hello(&mut self, host: &str) -> Result<String, String> {
         debug!("Shaking hands with the ESMTP server");
@@ -175,12 +176,34 @@ pub trait Raven: Stream {
 }
 
 impl Raven for TlsStream<TcpStream> {
-    fn create_connection(host: &str, port: u16) -> Result<Self, String> {
+    fn create_connection(host: &str, port: u16, cert_root: Option<String>) -> Result<Self, String> {
         debug!("Securing connection with {}", host);
-        let connector = TlsConnector::builder().build();
+        let mut connector_builder = TlsConnector::builder();
+
+        cert_root.iter().for_each(|cert_root| {
+            let f = File::open(cert_root);
+            if f.is_err() {
+                error!("Certificate file not found at: {}", cert_root);
+            }
+
+            let mut f = f.unwrap();
+
+            let mut contents: Vec<u8> = Vec::new();
+            let res = f.read_to_end(&mut contents);
+            if res.is_err() {
+                error!("Something went wrong reading the cert file: {}", cert_root);
+            }
+            let cert = Certificate::from_pem(contents.as_slice());
+            if cert.is_err() {
+                error!("Invalid certificate format, only pem is supported: {}", cert_root);
+            }
+            connector_builder.add_root_certificate(cert.unwrap());
+        });
+
+        let connector = connector_builder.build();
 
         debug!("Securing connection with {} on port {}", host, port);
-        let stream = TcpStream::create_connection(host, port)?;
+        let stream = TcpStream::create_connection(host, port, cert_root)?;
 
         if connector.is_ok() {
             debug!("Establishing TLS connection with {}", host);
@@ -197,7 +220,7 @@ impl Raven for TlsStream<TcpStream> {
 }
 
 impl Raven for TcpStream {
-    fn create_connection(host: &str, port: u16) -> Result<Self, String> {
+    fn create_connection(host: &str, port: u16, _cert_root: Option<String>) -> Result<Self, String> {
         debug!("Openning connection with {}", host);
         let ips = get_ip_address(host)?;
         let ip = ips.first();
