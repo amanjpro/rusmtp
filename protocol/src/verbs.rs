@@ -4,6 +4,9 @@
 pub const AUTH: &str = "AUTH";
 pub const DATA: &str = "DATA";
 pub const EHLO: &str = "EHLO";
+pub const HELO: &str = "HELO";
+pub const QUIT: &str = "QUIT";
+pub const VRFY: &str = "VRFY";
 pub const MAIL: &str = "MAIL";
 pub const NOOP: &str = "NOOP";
 pub const STARTTLS: &str = "STARTTLS";
