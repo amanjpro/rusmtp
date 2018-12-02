@@ -97,6 +97,8 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 default
             }).unwrap_or(false);
 
+            let cert_root = section.get("cert-root").map(|s| s.to_owned());
+
             accounts.push(Account {
                 label,
                 host,
@@ -107,6 +109,7 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 default,
                 password: None,
                 vault: Vault::new(),
+                cert_root,
             })
         }
     }

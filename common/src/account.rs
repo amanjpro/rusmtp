@@ -10,4 +10,5 @@ pub struct Account {
     pub default: bool,
     pub password: Option<Vec<u8>>,
     pub vault: Vault,
+    pub cert_root: Option<String>,
 }
