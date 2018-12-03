@@ -151,23 +151,32 @@ pub trait Raven: Stream {
     }
 
     fn recieve(&mut self) -> Result<String, String> {
-        let mut aggregated = String::new();
+        let mut aggregated = Vec::new();
         loop {
-            let mut response = [0; 4096];
-            let _ = self.read(&mut response);
-            let res = std::str::from_utf8(&response);
-            let res =
-                if res.is_err() {
-                    return Err("Cannot decode the message".to_string())
-                } else {
-                    res.unwrap()
-                };
-            aggregated += res;
-            if re.is_match(&aggregated) {
-                break;
+            let mut response = [0; 10];
+            let res = self.read(&mut response);
+            match res {
+                Err(err) =>
+                    return Err(format!("Cannot decode the message {}", err)),
+                Ok(0)    =>
+                    break,
+                Ok(n)    =>
+                    aggregated.extend(&response[0..n]),
             }
         }
-        Ok(aggregated)
+
+        let response = std::str::from_utf8(&aggregated.as_slice());
+        let res =
+            if response.is_err() {
+                return Err("Cannot decode SMTP server's resposne".to_string())
+            } else {
+                response.unwrap()
+            };
+        if re.is_match(&res) {
+            Ok(res.to_string())
+        } else {
+            Err(format!("Something went wrong, {}", res.to_string()))
+        }
     }
 
     fn send(&mut self, msg: &[u8]) {
