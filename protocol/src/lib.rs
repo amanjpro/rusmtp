@@ -12,6 +12,7 @@ extern crate lazy_static;
 
 use verbs::*;
 use base64::encode;
+use std::time::Duration;
 use regex::Regex;
 use std::fs::File;
 use std::io::prelude::*;
@@ -240,6 +241,7 @@ impl Raven for TcpStream {
         let ip = ip.unwrap();
 
         if let Ok(stream) = TcpStream::connect(format!("{}:{}", ip, port)) {
+            let _ = stream.set_read_timeout(Some(Duration::new(1, 0)));
             Ok(stream)
         } else {
             Err(format!("Cannot establish TCP connection with {}", host))
