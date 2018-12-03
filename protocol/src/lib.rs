@@ -241,7 +241,7 @@ impl Raven for TcpStream {
         let ip = ip.unwrap();
 
         if let Ok(stream) = TcpStream::connect(format!("{}:{}", ip, port)) {
-            let _ = stream.set_read_timeout(Some(Duration::new(1, 0)));
+            let _ = stream.set_read_timeout(Some(Duration::new(10, 0)));
             Ok(stream)
         } else {
             Err(format!("Cannot establish TCP connection with {}", host))
