@@ -44,3 +44,6 @@ default=false
 ; Provide custom certification root, per account. Please note that
 ; only pem files are supported
 ; cert-root=/custom-cert-root
+; tcp-timeout in seconds, default is 1 seconds, valid values are
+; between 0 and 255 second.
+; tcp-timeout=10

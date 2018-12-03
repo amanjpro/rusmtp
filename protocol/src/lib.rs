@@ -46,7 +46,8 @@ impl Stream for TcpStream {
 
 pub trait Raven: Stream {
 
-    fn create_connection(host: &str, port: u16, cert_root: Option<String>) -> Result<Self, String>;
+    fn create_connection(host: &str, port: u16,
+                         tiemout: Duration, cert_root: Option<String>) -> Result<Self, String>;
 
     fn send_hello(&mut self, host: &str) -> Result<String, String> {
         debug!("Shaking hands with the ESMTP server");
@@ -190,7 +191,9 @@ pub trait Raven: Stream {
 }
 
 impl Raven for TlsStream<TcpStream> {
-    fn create_connection(host: &str, port: u16, cert_root: Option<String>) -> Result<Self, String> {
+    fn create_connection(host: &str, port: u16,
+                         timeout: Duration,
+                         cert_root: Option<String>) -> Result<Self, String> {
         debug!("Securing connection with {}", host);
         let mut connector_builder = TlsConnector::builder();
 
@@ -217,7 +220,7 @@ impl Raven for TlsStream<TcpStream> {
         let connector = connector_builder.build();
 
         debug!("Securing connection with {} on port {}", host, port);
-        let stream = TcpStream::create_connection(host, port, cert_root)?;
+        let stream = TcpStream::create_connection(host, port, timeout, cert_root)?;
 
         if connector.is_ok() {
             debug!("Establishing TLS connection with {}", host);
@@ -234,7 +237,9 @@ impl Raven for TlsStream<TcpStream> {
 }
 
 impl Raven for TcpStream {
-    fn create_connection(host: &str, port: u16, _cert_root: Option<String>) -> Result<Self, String> {
+    fn create_connection(host: &str, port: u16,
+                         timeout: Duration,
+                         _cert_root: Option<String>) -> Result<Self, String> {
         debug!("Openning connection with {}", host);
         let ips = get_ip_address(host)?;
         let ip = ips.first();
@@ -245,7 +250,7 @@ impl Raven for TcpStream {
         let ip = ip.unwrap();
 
         if let Ok(stream) = TcpStream::connect(format!("{}:{}", ip, port)) {
-            let _ = stream.set_read_timeout(Some(Duration::new(10, 0)));
+            let _ = stream.set_read_timeout(Some(timeout));
             Ok(stream)
         } else {
             Err(format!("Cannot establish TCP connection with {}", host))

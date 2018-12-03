@@ -1,5 +1,6 @@
 use ini::Ini;
 use account::Account;
+use std::time::Duration;
 use dirs::home_dir;
 use vault::Vault;
 use log_and_panic;
@@ -99,6 +100,14 @@ pub fn read_config(rc_path: &str) -> Configuration {
 
             let cert_root = section.get("cert-root").map(|s| s.to_owned());
 
+            let timeout = section.get("tcp-timeout").map(|s| {
+                let timeout: u8 = s.parse()
+                    .unwrap_or_else(|_|
+                        log_and_panic(
+                            "Invalid tcp-timeout value in configuration (valid: numbers between 0 to 255)"));
+                Duration::new(u64::from(timeout), 0)
+            }).unwrap_or_else(|| Duration::new(1, 0));
+
             accounts.push(Account {
                 label,
                 host,
@@ -109,6 +118,7 @@ pub fn read_config(rc_path: &str) -> Configuration {
                 default,
                 password: None,
                 vault: Vault::new(),
+                timeout,
                 cert_root,
             })
         }
