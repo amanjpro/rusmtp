@@ -157,12 +157,16 @@ pub trait Raven: Stream {
             let mut response = [0; 10];
             let res = self.read(&mut response);
             match res {
-                Err(err) =>
-                    return Err(format!("Cannot decode the message {}", err)),
+                Err(_)   =>
+                    break,
                 Ok(0)    =>
                     break,
-                Ok(n)    =>
-                    aggregated.extend(&response[0..n]),
+                Ok(n)    => {
+                    aggregated.extend(&response[0..n]);
+                    if n < 10 {
+                        break
+                    }
+                },
             }
         }
 
