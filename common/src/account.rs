@@ -1,3 +1,4 @@
+use std::time::Duration;
 use vault::Vault;
 
 pub struct Account {
@@ -10,4 +11,6 @@ pub struct Account {
     pub default: bool,
     pub password: Option<Vec<u8>>,
     pub vault: Vault,
+    pub timeout: Duration,
+    pub cert_root: Option<String>,
 }

@@ -12,10 +12,12 @@ extern crate lazy_static;
 
 use verbs::*;
 use base64::encode;
+use std::time::Duration;
 use regex::Regex;
+use std::fs::File;
 use std::io::prelude::*;
 use std::net::Shutdown;
-use native_tls::{TlsConnector, TlsStream};
+use native_tls::{TlsConnector, TlsStream, Certificate};
 use std::net::{TcpStream, ToSocketAddrs, IpAddr};
 
 
@@ -44,7 +46,8 @@ impl Stream for TcpStream {
 
 pub trait Raven: Stream {
 
-    fn create_connection(host: &str, port: u16) -> Result<Self, String>;
+    fn create_connection(host: &str, port: u16,
+                         tiemout: Duration, cert_root: Option<String>) -> Result<Self, String>;
 
     fn send_hello(&mut self, host: &str) -> Result<String, String> {
         debug!("Shaking hands with the ESMTP server");
@@ -150,23 +153,36 @@ pub trait Raven: Stream {
     }
 
     fn recieve(&mut self) -> Result<String, String> {
-        let mut aggregated = String::new();
+        let mut aggregated = Vec::new();
         loop {
-            let mut response = [0; 4096];
-            let _ = self.read(&mut response);
-            let res = std::str::from_utf8(&response);
-            let res =
-                if res.is_err() {
-                    return Err("Cannot decode the message".to_string())
-                } else {
-                    res.unwrap()
-                };
-            aggregated += res;
-            if re.is_match(&aggregated) {
-                break;
+            let mut response = [0; 10];
+            let res = self.read(&mut response);
+            match res {
+                Err(_)   =>
+                    break,
+                Ok(0)    =>
+                    break,
+                Ok(n)    => {
+                    aggregated.extend(&response[0..n]);
+                    if n < 10 {
+                        break
+                    }
+                },
             }
         }
-        Ok(aggregated)
+
+        let response = std::str::from_utf8(&aggregated.as_slice());
+        let res =
+            if response.is_err() {
+                return Err("Cannot decode SMTP server's resposne".to_string())
+            } else {
+                response.unwrap()
+            };
+        if re.is_match(&res) {
+            Ok(res.to_string())
+        } else {
+            Err(format!("Something went wrong, {}", res.to_string()))
+        }
     }
 
     fn send(&mut self, msg: &[u8]) {
@@ -175,12 +191,36 @@ pub trait Raven: Stream {
 }
 
 impl Raven for TlsStream<TcpStream> {
-    fn create_connection(host: &str, port: u16) -> Result<Self, String> {
+    fn create_connection(host: &str, port: u16,
+                         timeout: Duration,
+                         cert_root: Option<String>) -> Result<Self, String> {
         debug!("Securing connection with {}", host);
-        let connector = TlsConnector::builder().build();
+        let mut connector_builder = TlsConnector::builder();
+
+        cert_root.iter().for_each(|cert_root| {
+            let f = File::open(cert_root);
+            if f.is_err() {
+                error!("Certificate file not found at: {}", cert_root);
+            }
+
+            let mut f = f.unwrap();
+
+            let mut contents: Vec<u8> = Vec::new();
+            let res = f.read_to_end(&mut contents);
+            if res.is_err() {
+                error!("Something went wrong reading the cert file: {}", cert_root);
+            }
+            let cert = Certificate::from_pem(contents.as_slice());
+            if cert.is_err() {
+                error!("Invalid certificate format, only pem is supported: {}", cert_root);
+            }
+            connector_builder.add_root_certificate(cert.unwrap());
+        });
+
+        let connector = connector_builder.build();
 
         debug!("Securing connection with {} on port {}", host, port);
-        let stream = TcpStream::create_connection(host, port)?;
+        let stream = TcpStream::create_connection(host, port, timeout, cert_root)?;
 
         if connector.is_ok() {
             debug!("Establishing TLS connection with {}", host);
@@ -197,7 +237,9 @@ impl Raven for TlsStream<TcpStream> {
 }
 
 impl Raven for TcpStream {
-    fn create_connection(host: &str, port: u16) -> Result<Self, String> {
+    fn create_connection(host: &str, port: u16,
+                         timeout: Duration,
+                         _cert_root: Option<String>) -> Result<Self, String> {
         debug!("Openning connection with {}", host);
         let ips = get_ip_address(host)?;
         let ip = ips.first();
@@ -208,6 +250,7 @@ impl Raven for TcpStream {
         let ip = ip.unwrap();
 
         if let Ok(stream) = TcpStream::connect(format!("{}:{}", ip, port)) {
+            let _ = stream.set_read_timeout(Some(timeout));
             Ok(stream)
         } else {
             Err(format!("Cannot establish TCP connection with {}", host))

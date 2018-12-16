@@ -36,7 +36,11 @@ impl DefaultClient {
 
         let port     = account.port.as_ref().unwrap();
 
-        let mailer = R::create_connection(&host, *port);
+        let cert_root = account.cert_root.as_ref().map(|c| c.to_owned());
+
+        let timeout = account.timeout;
+
+        let mailer = R::create_connection(&host, *port, timeout, cert_root);
 
         let mut mailer = match mailer {
             Ok(mailer) => mailer,

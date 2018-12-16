@@ -115,6 +115,8 @@ fn start_daemon(conf: Configuration) -> Vec<JoinHandle<()>> {
                         default: account.default,
                         password: Some(account.vault.encrypt(&mut passwd)),
                         vault: account.vault,
+                        cert_root: account.cert_root,
+                        timeout: account.timeout,
                     };
 
                     match client {
