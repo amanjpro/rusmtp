@@ -1,12 +1,12 @@
 use protocol::{Raven, Authentication};
 use common::{ERROR_SIGNAL,OK_SIGNAL,get_socket_path};
-use mail::Mail;
-use vault::Vault;
-use account::Account;
+use common::mail::Mail;
+use common::vault::Vault;
+use common::account::Account;
+use native_tls::TlsStream;
 use std::io::{Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::ops::Deref;
-use clients::native_tls::TlsStream;
 use std::net::TcpStream;
 
 pub struct DefaultClient {

@@ -21,7 +21,7 @@ use std::io::{self, Read, Write};
 use rand::random;
 use fs2::FileExt;
 use dirs::home_dir;
-use clients::send_to_daemon;
+use crate::clients::send_to_daemon;
 use common::*;
 use common::args::*;
 use common::mail::*;

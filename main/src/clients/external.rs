@@ -1,6 +1,6 @@
 use common::{OK_SIGNAL,ERROR_SIGNAL,get_socket_path};
-use mail::Mail;
-use vault::Vault;
+use common::mail::Mail;
+use common::vault::Vault;
 use std::os::unix::net::{UnixStream, UnixListener};
 use std::process::{Command, Stdio};
 use std::str;

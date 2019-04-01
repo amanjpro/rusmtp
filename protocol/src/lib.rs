@@ -10,7 +10,7 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 
-use verbs::*;
+use crate::verbs::*;
 use base64::encode;
 use std::time::Duration;
 use regex::Regex;

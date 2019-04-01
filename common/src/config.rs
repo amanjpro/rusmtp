@@ -1,9 +1,9 @@
 use ini::Ini;
-use account::Account;
 use std::time::Duration;
 use dirs::home_dir;
-use vault::Vault;
-use log_and_panic;
+use crate::account::Account;
+use crate::vault::Vault;
+use crate::log_and_panic;
 
 pub struct Configuration {
     pub smtpclient: Option<String>,

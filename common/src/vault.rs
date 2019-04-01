@@ -3,7 +3,7 @@ use ring::pbkdf2::*;
 use ring::digest::SHA256;
 use ring::rand::{SystemRandom, SecureRandom};
 use rand::{thread_rng, Rng};
-use log_and_panic;
+use crate::log_and_panic;
 
 
 pub struct Vault {
