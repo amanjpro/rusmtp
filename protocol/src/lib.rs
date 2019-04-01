@@ -1,9 +1,5 @@
 pub mod verbs;
 
-extern crate native_tls;
-extern crate base64;
-extern crate regex;
-
 #[macro_use]
 extern crate log;
 

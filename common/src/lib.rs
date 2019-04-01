@@ -1,9 +1,3 @@
-extern crate ring;
-extern crate rand;
-extern crate dirs;
-extern crate docopt;
-extern crate ini;
-
 #[macro_use]
 extern crate log;
 

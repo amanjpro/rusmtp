@@ -1,12 +1,7 @@
 pub mod clients;
 
-extern crate common;
-extern crate protocol;
-extern crate fs2;
-
 #[macro_use]
 extern crate log;
-extern crate dirs;
 
 use std::alloc::System;
 use std::process::{Command, Stdio};

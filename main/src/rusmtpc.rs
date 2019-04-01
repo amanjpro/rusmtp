@@ -1,16 +1,7 @@
 pub mod clients;
 
-extern crate protocol;
-
 #[macro_use]
 extern crate log;
-
-extern crate rand;
-extern crate fs2;
-extern crate common;
-
-extern crate log4rs;
-extern crate dirs;
 
 use std::alloc::System;
 use std::fs::File;
