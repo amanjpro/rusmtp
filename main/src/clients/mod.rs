@@ -1,5 +1,3 @@
-extern crate native_tls;
-
 use common::*;
 use common::mail::*;
 use std::io::{Read, Write};

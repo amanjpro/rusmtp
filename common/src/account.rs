@@ -1,5 +1,5 @@
 use std::time::Duration;
-use vault::Vault;
+use crate::vault::Vault;
 
 pub struct Account {
     pub label: String,

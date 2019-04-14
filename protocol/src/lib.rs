@@ -1,16 +1,12 @@
 pub mod verbs;
 
-extern crate native_tls;
-extern crate base64;
-extern crate regex;
-
 #[macro_use]
 extern crate log;
 
 #[macro_use]
 extern crate lazy_static;
 
-use verbs::*;
+use crate::verbs::*;
 use base64::encode;
 use std::time::Duration;
 use regex::Regex;
@@ -178,7 +174,7 @@ pub trait Raven: Stream {
             } else {
                 response.unwrap()
             };
-        if re.is_match(&res) {
+        if RE.is_match(&res) {
             Ok(res.to_string())
         } else {
             Err(format!("Something went wrong, {}", res.to_string()))
@@ -278,7 +274,7 @@ fn get_ip_address(host: &str) -> Result<Vec<IpAddr>, String> {
 }
 
 lazy_static! {
-    static ref re: Regex = Regex::new(r"(?m)^\d{3} .*$").unwrap();
+    static ref RE: Regex = Regex::new(r"(?m)^\d{3} .*$").unwrap();
 }
 
 fn tokenize(response: &str) -> Vec<&str> {

@@ -1,5 +1,5 @@
 use std::str;
-use {transform_u64_to_array_of_u8, transform_array_of_u8_to_u64};
+use crate::{transform_u64_to_array_of_u8, transform_array_of_u8_to_u64};
 
 #[derive(Debug, PartialEq)]
 pub struct Mail {

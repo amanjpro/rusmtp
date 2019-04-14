@@ -1,16 +1,7 @@
 pub mod clients;
 
-extern crate protocol;
-
 #[macro_use]
 extern crate log;
-
-extern crate rand;
-extern crate fs2;
-extern crate common;
-
-extern crate log4rs;
-extern crate dirs;
 
 use std::alloc::System;
 use std::fs::File;
@@ -21,7 +12,7 @@ use std::io::{self, Read, Write};
 use rand::random;
 use fs2::FileExt;
 use dirs::home_dir;
-use clients::send_to_daemon;
+use crate::clients::send_to_daemon;
 use common::*;
 use common::args::*;
 use common::mail::*;
