@@ -28,7 +28,6 @@ deploy:
   file: archives/*.tar.gz
   skip_cleanup: true
   api_key:
-    secure: qwG+ZexDoTEQphncSOWUYkIszjojN/PefwdG+ofaSJ5liPemyZ3tTUpqulJbZdKdeckTaE/VYv7FiXmIvPWLvMh5ZNai6pBb0x5N+fJgES8cSlkoDvd4tFrJ8HJxmk9AWCEtFrQMpbmwclle4N4R3rWg+Hyyc4aJwaPGBMGAOEtC0WKyz6R3l/s+LFeiHEh3Ou16beZcqbN/LA4KffTKezJOI+yaWyyz5PU7kJRXkXq+7MXa+qEzqx0Mg1ZLE6eBxPcUyHOsvqY6OWBBKoAwl7O5e0RZ5wzDh+MIC0IZnCw8iTqTTxqEAVqybJU1FeaRg5+4xtCyuhxZ44TYWKOk0o7n9Uy+IPrf3Do4AVsQUKSwQAh9kgFoiOopgIcfaq4TssOwe3wSuC2hWKon6bcrDjYoE2rCFTlJAtyDyp0UmzYolzKuPUHagbq0UzcWImVN4PrIfgawxhWdx2/Xi9HWfh6RYLUUeLQDTAfY6eRgqamHmq51NHCNAHm96cvcMtCpg1wTmdmtIsDB9SAA/W1kTfSQjq6Nftg0HxMdY4xBbBGx0SBbQBLUu01FDo68j8ubLWAMnpKygKsHOZM4y/C/f87/h0m0QZ8qcwKnqPKz3/QN6EuD5Gabb0c65XkhLnahtpu9HfhFYHU0LzLtsUFahTvpv92zwJd26eCW8NDj+GQ=
+    secure: $GITHUB_RELEASES_TOKEN
   on:
     tags: true
-
